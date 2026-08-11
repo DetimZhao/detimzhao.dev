@@ -19,6 +19,7 @@
 
 <div class="trail-count" id="trail-count"></div>
 
+<div class="bottom-bar">
 <div class="input-container" id="input-container" data-od-id="formula-input">
   <span class="prompt">&gt;</span>
   <div class="input-wrapper">
@@ -32,6 +33,19 @@
     >
     <span class="ghost-text visible" id="ghost-text" aria-hidden="true">type a word or formula…</span>
   </div>
+</div>
+
+<div class="pipeline" id="pipeline">
+  <span class="pipe-stage" data-stage="embed">embed 384d</span>
+  <span class="pipe-arrow">&rarr;</span>
+  <span class="pipe-stage" data-stage="math">arithmetic</span>
+  <span class="pipe-arrow">&rarr;</span>
+  <span class="pipe-stage" data-stage="pca">PCA-3</span>
+  <span class="pipe-arrow">&rarr;</span>
+  <span class="pipe-stage" data-stage="knn">top-k neighbors</span>
+</div>
+
+<div class="annotation" id="annotation"></div>
 </div>
 
 <div class="info-card" id="info-card" data-od-id="point-info-card">

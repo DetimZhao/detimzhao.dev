@@ -3,7 +3,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const TOTAL_POINTS = 5000;
 const VOLUME_RADIUS = 14;
-const BG_DIM_COLOR = new THREE.Color('#0d0f10');
 const ACCENT_COLOR = new THREE.Color('#00d4ff');
 const ACCENT_BRIGHT = new THREE.Color('#33eeff');
 const ACCENT_DIM = new THREE.Color('#006d78');
@@ -215,6 +214,8 @@ function randomNear(center, radius) {
   return [cx + dx, cy + dy, cz + dz];
 }
 
+const BASE_COLORS = new Float32Array(TOTAL_POINTS * 3);
+
 let pi = 0;
 for (const [, cluster] of Object.entries(WORD_CLUSTERS)) {
   const nPoints = Math.floor(cluster.neighbors.length * 2.5) + 15;
@@ -223,9 +224,13 @@ for (const [, cluster] of Object.entries(WORD_CLUSTERS)) {
     positions[pi * 3] = x;
     positions[pi * 3 + 1] = y;
     positions[pi * 3 + 2] = z;
-    colors[pi * 3] = BG_DIM_COLOR.r;
-    colors[pi * 3 + 1] = BG_DIM_COLOR.g;
-    colors[pi * 3 + 2] = BG_DIM_COLOR.b;
+    const b = 0.04 + Math.random() * 0.10;
+    colors[pi * 3] = b;
+    colors[pi * 3 + 1] = b;
+    colors[pi * 3 + 2] = b;
+    BASE_COLORS[pi * 3] = b;
+    BASE_COLORS[pi * 3 + 1] = b;
+    BASE_COLORS[pi * 3 + 2] = b;
     pi++;
   }
 }
@@ -235,21 +240,45 @@ for (let i = pi; i < TOTAL_POINTS; i++) {
   positions[i * 3] = x;
   positions[i * 3 + 1] = y;
   positions[i * 3 + 2] = z;
-  colors[i * 3] = BG_DIM_COLOR.r;
-  colors[i * 3 + 1] = BG_DIM_COLOR.g;
-  colors[i * 3 + 2] = BG_DIM_COLOR.b;
+  const b = 0.015 + Math.random() * 0.035;
+  colors[i * 3] = b;
+  colors[i * 3 + 1] = b;
+  colors[i * 3 + 2] = b;
+  BASE_COLORS[i * 3] = b;
+  BASE_COLORS[i * 3 + 1] = b;
+  BASE_COLORS[i * 3 + 2] = b;
 }
 
 const geometry = new THREE.BufferGeometry();
 geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
+function createCircleTexture() {
+  const size = 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2 - 6);
+  gradient.addColorStop(0, 'rgba(255,255,255,1)');
+  gradient.addColorStop(0.25, 'rgba(255,255,255,0.95)');
+  gradient.addColorStop(0.6, 'rgba(255,255,255,0.4)');
+  gradient.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(canvas);
+}
+
+const pointTexture = createCircleTexture();
+
 const pointMaterial = new THREE.PointsMaterial({
-  size: 0.10,
+  size: 0.22,
+  map: pointTexture,
   vertexColors: true,
   blending: THREE.AdditiveBlending,
   depthWrite: false,
   sizeAttenuation: true,
+  transparent: true,
 });
 
 const pointCloud = new THREE.Points(geometry, pointMaterial);
@@ -324,6 +353,8 @@ const clearBtn = document.getElementById('clear-btn');
 const trailCount = document.getElementById('trail-count');
 const observatoryOverlay = document.getElementById('observatory-overlay');
 const observatoryPanel = document.getElementById('observatory-panel');
+const pipeline = document.getElementById('pipeline');
+const pipelineAnnotation = document.getElementById('annotation');
 
 let infoCardTarget = null;
 let infoCardVisible = false;
@@ -332,6 +363,47 @@ let ripples = [];
 let autoRotatePaused = false;
 let autoRotateTimer = 0;
 
+function createRingTexture() {
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = 'rgba(0,212,255,0.5)';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2 - 16, 0, Math.PI * 2);
+  ctx.stroke();
+  return new THREE.CanvasTexture(canvas);
+}
+
+let clickRingSprite = null;
+
+function spawnClickRing(position) {
+  removeClickRing();
+  const mat = new THREE.SpriteMaterial({
+    map: createRingTexture(),
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    depthTest: true,
+    transparent: true,
+  });
+  clickRingSprite = new THREE.Sprite(mat);
+  clickRingSprite.position.copy(position);
+  const dist = camera.position.distanceTo(position);
+  clickRingSprite.scale.set(dist * 0.013, dist * 0.013, 1);
+  spriteGroup.add(clickRingSprite);
+}
+
+function removeClickRing() {
+  if (clickRingSprite) {
+    spriteGroup.remove(clickRingSprite);
+    clickRingSprite.material.map.dispose();
+    clickRingSprite.material.dispose();
+    clickRingSprite = null;
+  }
+}
+
 function spawnRipple(position) {
   const mat = new THREE.SpriteMaterial({
     map: glowTextureBright,
@@ -339,13 +411,13 @@ function spawnRipple(position) {
     depthWrite: false,
     depthTest: true,
     transparent: true,
-    opacity: 0.8,
+    opacity: 0.3,
   });
   const sprite = new THREE.Sprite(mat);
   sprite.position.copy(position);
-  sprite.scale.set(0.3, 0.3, 1);
+  sprite.scale.set(0.15, 0.15, 1);
   spriteGroup.add(sprite);
-  ripples.push({ sprite, age: 0, maxAge: 1200 });
+  ripples.push({ sprite, age: 0, maxAge: 600 });
 }
 
 function pauseAutoRotate() {
@@ -433,14 +505,16 @@ function evictTrails() {
     if (removed.resultGlow) spriteGroup.remove(removed.resultGlow);
     if (removed.resultLabel) spriteGroup.remove(removed.resultLabel);
     for (const idx of removed.highlightedIndices) {
-      colors[idx * 3] = BG_DIM_COLOR.r;
-      colors[idx * 3 + 1] = BG_DIM_COLOR.g;
-      colors[idx * 3 + 2] = BG_DIM_COLOR.b;
+      colors[idx * 3] = BASE_COLORS[idx * 3];
+      colors[idx * 3 + 1] = BASE_COLORS[idx * 3 + 1];
+      colors[idx * 3 + 2] = BASE_COLORS[idx * 3 + 2];
     }
   }
 }
 
 function clearAllTrails() {
+  removeClickRing();
+  hideInfoCard();
   for (const trail of trails) {
     trail.glowSprites.forEach(s => spriteGroup.remove(s));
     trail.labelSprites.forEach(s => spriteGroup.remove(s));
@@ -448,9 +522,9 @@ function clearAllTrails() {
     if (trail.resultGlow) spriteGroup.remove(trail.resultGlow);
     if (trail.resultLabel) spriteGroup.remove(trail.resultLabel);
     for (const idx of trail.highlightedIndices) {
-      colors[idx * 3] = BG_DIM_COLOR.r;
-      colors[idx * 3 + 1] = BG_DIM_COLOR.g;
-      colors[idx * 3 + 2] = BG_DIM_COLOR.b;
+      colors[idx * 3] = BASE_COLORS[idx * 3];
+      colors[idx * 3 + 1] = BASE_COLORS[idx * 3 + 1];
+      colors[idx * 3 + 2] = BASE_COLORS[idx * 3 + 2];
     }
   }
   trails = [];
@@ -461,6 +535,7 @@ function clearAllTrails() {
   updateTrailCount();
   updateURLHash('');
   inputContainer.classList.remove('active');
+  hidePipeline();
   formulaInput.value = '';
   ghostText.classList.add('visible');
 }
@@ -593,6 +668,25 @@ function brightenCluster(clusterKey, maxNeighbors, trail) {
   const centerPos = new THREE.Vector3(...cluster.center);
   addGlowAt(centerPos, true, trail);
 
+  const nHalo = Math.min(8, sortedPts.length);
+  for (let i = 0; i < nHalo; i++) {
+    const { pos } = sortedPts[i];
+    if (pos.distanceTo(centerPos) < 0.01) continue;
+    const haloMat = new THREE.SpriteMaterial({
+      map: glowTexture,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      depthTest: true,
+      transparent: true,
+      opacity: 0.12 + (1 - i / nHalo) * 0.18,
+    });
+    const halo = new THREE.Sprite(haloMat);
+    halo.position.copy(pos);
+    halo.scale.set(0.45, 0.45, 1);
+    spriteGroup.add(halo);
+    trail.glowSprites.push(halo);
+  }
+
   for (let i = 0; i < Math.min(nDisplay, 5); i++) {
     const neighbor = cluster.neighbors[i];
     const dir = new THREE.Vector3(
@@ -627,9 +721,13 @@ function handleFormula(formula) {
       lastFormulaResultWord = clusterKey;
       inputContainer.classList.add('active');
       updateURLHash(formula);
+      showPipeline();
+      setPipelineStage(3);
+      setPipelineAnnotation(`single-word lookup — nearest neighbors by cosine similarity`);
       return;
     }
     inputContainer.classList.remove('active');
+    hidePipeline();
     return;
   }
 
@@ -725,6 +823,17 @@ function handleFormula(formula) {
         lastFormula = formula;
         inputContainer.classList.add('active');
         updateURLHash(formula);
+        showPipeline();
+        if (lastFormulaResultWord) {
+          setPipelineStage(3);
+          const opStr = lastFormulaTokens.length >= 3
+            ? `${lastFormulaTokens[0]} ${lastFormulaOps[0]} ${lastFormulaTokens[1]} ${lastFormulaOps[1] || '+'} ${lastFormulaTokens[2]}`
+            : `${lastFormulaTokens.join(` ${lastFormulaOps[0]} `)}`;
+          setPipelineAnnotation(`vector arithmetic: ${opStr} = ${lastFormulaResultWord} — top-10 neighbors`);
+        } else {
+          setPipelineStage(1);
+          setPipelineAnnotation(`vector arithmetic: ${lastFormulaTokens.join(` ${op} `)}`);
+        }
         return;
       }
 
@@ -776,6 +885,7 @@ function showInfoCard(worldPos, word) {
   infoCardTarget = worldPos;
 
   spawnRipple(worldPos);
+  spawnClickRing(worldPos);
   pauseAutoRotate();
 }
 
@@ -783,6 +893,7 @@ function hideInfoCard() {
   infoCard.classList.remove('visible');
   infoCardVisible = false;
   infoCardTarget = null;
+  removeClickRing();
   resumeAutoRotate();
 }
 
@@ -873,6 +984,27 @@ function showObservatory() {
 
 function hideObservatory() {
   observatoryOverlay.classList.remove('visible');
+}
+
+function setPipelineStage(stageIdx) {
+  const stages = pipeline.querySelectorAll('.pipe-stage');
+  stages.forEach((s, i) => s.classList.toggle('highlight', i === stageIdx));
+}
+
+function showPipeline() {
+  pipeline.classList.add('visible');
+}
+
+function hidePipeline() {
+  pipeline.classList.remove('visible');
+  pipelineAnnotation.classList.remove('visible');
+  const stages = pipeline.querySelectorAll('.pipe-stage');
+  stages.forEach(s => s.classList.remove('highlight'));
+}
+
+function setPipelineAnnotation(text) {
+  pipelineAnnotation.textContent = text;
+  pipelineAnnotation.classList.add('visible');
 }
 
 formulaInput.addEventListener('keydown', (e) => {
@@ -1002,9 +1134,9 @@ function animate() {
       r.sprite.material.dispose();
       ripples.splice(i, 1);
     } else {
-      const s = 0.3 + t * 2.5;
+      const s = 0.15 + t * 0.5;
       r.sprite.scale.set(s, s, 1);
-      r.sprite.material.opacity = 0.8 * (1 - t);
+      r.sprite.material.opacity = 0.3 * (1 - t);
     }
   }
 
@@ -1021,6 +1153,12 @@ function animate() {
     const y = (-vec.y * 0.5 + 0.5) * window.innerHeight;
     infoCard.style.left = `${x}px`;
     infoCard.style.top = `${y}px`;
+  }
+
+  if (clickRingSprite) {
+    const dist = camera.position.distanceTo(clickRingSprite.position);
+    const s = dist * 0.013 + Math.sin(now * 0.005) * 0.02;
+    clickRingSprite.scale.set(s, s, 1);
   }
 
   renderer.render(scene, camera);
