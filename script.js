@@ -591,9 +591,9 @@ function addConnectorBetween(a, b, trail) {
   const dir = new THREE.Vector3().copy(b).sub(a);
   const len = dir.length();
   const mid = new THREE.Vector3().copy(a).add(b).multiplyScalar(0.5);
-  const geom = new THREE.CylinderGeometry(0.05, 0.05, len, 8, 1);
+  const geom = new THREE.CylinderGeometry(0.01, 0.015, len, 6, 1);
   const mat = new THREE.MeshBasicMaterial({
-    color: ACCENT_BRIGHT,
+    color: 0xffffff,
     blending: THREE.NormalBlending,
     depthWrite: false,
     depthTest: false,
@@ -608,6 +608,28 @@ function addConnectorBetween(a, b, trail) {
   mesh.renderOrder = 999;
   lineGroup.add(mesh);
   trail.lines.push(mesh);
+
+  const dotGeom = new THREE.SphereGeometry(0.04, 6, 4);
+  const dotMat = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    blending: THREE.NormalBlending,
+    depthWrite: false,
+    depthTest: false,
+    transparent: true,
+    opacity: 0.9,
+  });
+  const dotA = new THREE.Mesh(dotGeom, dotMat);
+  dotA.position.copy(a);
+  dotA.renderOrder = 1000;
+  lineGroup.add(dotA);
+  trail.lines.push(dotA);
+
+  const dotB = new THREE.Mesh(dotGeom, dotMat);
+  dotB.position.copy(b);
+  dotB.renderOrder = 1000;
+  lineGroup.add(dotB);
+  trail.lines.push(dotB);
+
   return mesh;
 }
 
