@@ -1,0 +1,12 @@
+- generic [ref=f8e1]:
+  - generic: 1 trail
+  - generic [ref=f8e3]:
+    - generic [ref=f8e4]: ">"
+    - generic [ref=f8e5]:
+      - textbox "type a word or formula…" [active] [ref=f8e6]
+      - generic: type a word or formula…
+  - generic:
+    - list
+  - generic [ref=f8e7]:
+    - button "Clear trails" [ref=f8e8] [cursor=pointer]: ×
+    - button "Help" [ref=f8e9] [cursor=pointer]: "?"
