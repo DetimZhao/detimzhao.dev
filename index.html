@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semantic Arithmetic Playground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="loading" id="loading">initializing point cloud…</div>
+
+<div class="scanlines"></div>
+
+<div class="status-line" id="status-line"></div>
+
+<div class="trail-count" id="trail-count"></div>
+
+<div class="input-container" id="input-container" data-od-id="formula-input">
+  <span class="prompt">&gt;</span>
+  <div class="input-wrapper">
+    <input
+      type="text"
+      class="formula-input"
+      id="formula-input"
+      placeholder="type a word or formula…"
+      spellcheck="false"
+      autocomplete="off"
+    >
+    <span class="ghost-text visible" id="ghost-text" aria-hidden="true">type a word or formula…</span>
+  </div>
+</div>
+
+<div class="info-card" id="info-card" data-od-id="point-info-card">
+  <div class="info-card-word" id="info-card-word"></div>
+  <ul class="info-card-list" id="info-card-list"></ul>
+</div>
+
+<div class="bottom-buttons">
+  <button class="bottom-btn" id="clear-btn" aria-label="Clear trails" title="Clear all trails">×</button>
+  <button class="bottom-btn" id="help-btn" aria-label="Help" data-od-id="help-button">?</button>
+</div>
+
+<div class="observatory-overlay" id="observatory-overlay">
+  <div class="observatory-panel" id="observatory-panel"></div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>

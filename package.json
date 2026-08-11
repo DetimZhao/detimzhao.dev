@@ -1,0 +1,12 @@
+{
+  "name": "semantic-arithmetic-playground",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Semantic vector arithmetic explorer with 3D point cloud",
+  "scripts": {
+    "serve": "npx serve ."
+  },
+  "devDependencies": {
+    "@playwright/mcp": "latest"
+  }
+}

@@ -1,0 +1,27 @@
+- generic [ref=f1e1]:
+  - generic [ref=f1e3]:
+    - generic [ref=f1e4]: ">"
+    - generic [ref=f1e5]:
+      - textbox "type a word or formula…" [active] [ref=f1e6]
+      - generic: type a word or formula…
+  - generic [ref=f1e10]:
+    - generic [ref=f1e11]: man
+    - list [ref=f1e12]:
+      - listitem [ref=f1e13]:
+        - generic [ref=f1e14]: male
+        - generic [ref=f1e15]: "0.920"
+      - listitem [ref=f1e16]:
+        - generic [ref=f1e17]: gentleman
+        - generic [ref=f1e18]: "0.840"
+      - listitem [ref=f1e19]:
+        - generic [ref=f1e20]: husband
+        - generic [ref=f1e21]: "0.790"
+      - listitem [ref=f1e22]:
+        - generic [ref=f1e23]: father
+        - generic [ref=f1e24]: "0.760"
+      - listitem [ref=f1e25]:
+        - generic [ref=f1e26]: boy
+        - generic [ref=f1e27]: "0.720"
+  - generic [ref=f1e7]:
+    - button "Clear trails" [ref=f1e8] [cursor=pointer]: ×
+    - button "Help" [ref=f1e9] [cursor=pointer]: "?"

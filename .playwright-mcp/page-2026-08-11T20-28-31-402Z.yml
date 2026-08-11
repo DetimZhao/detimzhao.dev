@@ -1,0 +1,41 @@
+- generic [ref=f3e1]:
+  - generic: 1 trail
+  - generic [ref=f3e3]:
+    - generic [ref=f3e4]: ">"
+    - generic [ref=f3e5]:
+      - textbox "type a word or formula…" [ref=f3e6]
+      - generic: type a word or formula…
+  - generic:
+    - list
+  - generic [ref=f3e7]:
+    - button "Clear trails" [ref=f3e8] [cursor=pointer]: ×
+    - button "Help" [active] [ref=f3e9] [cursor=pointer]: "?"
+  - generic [ref=f3e11]:
+    - generic [ref=f3e12]: observatory
+    - generic [ref=f3e13]:
+      - generic [ref=f3e14]:
+        - generic [ref=f3e15]: "1."
+        - generic [ref=f3e16]:
+          - generic [ref=f3e17]: tokenize
+          - generic [ref=f3e18]: king man woman
+      - generic [ref=f3e19]:
+        - generic [ref=f3e20]: "2."
+        - generic [ref=f3e21]:
+          - generic [ref=f3e22]: embed (384-dim)
+          - generic [ref=f3e23]: king → vector man → vector woman → vector
+      - generic [ref=f3e24]:
+        - generic [ref=f3e25]: "3."
+        - generic [ref=f3e26]:
+          - generic [ref=f3e27]: arithmetic
+          - generic [ref=f3e28]: king - man + woman
+      - generic [ref=f3e29]:
+        - generic [ref=f3e30]: "4."
+        - generic [ref=f3e31]:
+          - generic [ref=f3e32]: PCA-3 projection
+          - generic [ref=f3e33]: project 384d → 3D point cloud position
+      - generic [ref=f3e34]:
+        - generic [ref=f3e35]: "5."
+        - generic [ref=f3e36]:
+          - generic [ref=f3e37]: result
+          - generic [ref=f3e38]: queen + top-10 neighbors
+    - generic [ref=f3e39]: "model: sentence-transformers/all-MiniLM-L6-v2 corpus: ~3,000 AI/ML concepts projection: PCA (3 components) variance explained: ~14%"
