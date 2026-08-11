@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Observatory — Prototype</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+  :root {
+    --bg:      #0a0a0a;
+    --surface: oklch(0.11 0.005 260);
+    --fg:      oklch(0.92 0 0);
+    --muted:   oklch(0.40 0 0);
+    --border:  oklch(0.22 0 0);
+    --accent:  oklch(0.77 0.18 200);
+    --accent-dim: oklch(0.77 0.18 200 / 0.25);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    width: 640px;
+    max-width: 95vw;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .close { color: var(--muted); cursor: default; }
+  .close:hover { color: var(--accent); }
+  .section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .section:last-child { border-bottom: none; }
+  .section-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .formula-bar {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    flex-wrap: wrap;
+  }
+  .formula-bar .token { color: var(--muted); }
+  .formula-bar .op { color: var(--accent); }
+  .formula-bar .arrow { color: var(--accent); }
+  .formula-bar .result { color: var(--fg); }
+  .heatmap-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .heatmap-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .heatmap-row .name {
+    width: 80px;
+    text-align: right;
+    color: var(--muted);
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .heatmap-row .cells {
+    display: flex;
+    gap: 1px;
+  }
+  .heatmap-row .cell {
+    width: 12px;
+    height: 14px;
+    background: var(--accent-dim);
+  }
+  .bin-labels {
+    display: flex;
+    gap: 1px;
+    padding-left: 88px;
+    font-size: 9px;
+    color: var(--border);
+  }
+  .bin-labels span {
+    width: 12px;
+    text-align: center;
+  }
+  .bin-labels span:first-child { width: 12px; }
+  .arithmetic {
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .arithmetic .sym { color: var(--accent); }
+  .arithmetic .cosine {
+    color: var(--accent-dim);
+    font-size: 10px;
+    margin-left: 8px;
+  }
+  .pca-chip {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .pca-chip span { color: var(--accent); }
+  .neighbors-table {
+    width: 100%;
+  }
+  .neighbors-table .row {
+    display: flex;
+    align-items: center;
+    padding: 3px 0;
+  }
+  .neighbors-table .row:nth-child(even) {
+    background: oklch(0.13 0.005 260);
+  }
+  .neighbors-table .rank {
+    width: 28px;
+    color: var(--border);
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .neighbors-table .nname {
+    width: 180px;
+    flex-shrink: 0;
+    padding-left: 8px;
+  }
+  .neighbors-table .bar-wrap {
+    flex: 1;
+    padding-left: 8px;
+  }
+  .neighbors-table .bar {
+    height: 10px;
+    background: var(--accent-dim);
+  }
+  .neighbors-table .score {
+    width: 50px;
+    text-align: right;
+    color: var(--accent-dim);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .footer {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+  }
+  .footer .link { color: var(--accent); }
+  .footer .sep { color: var(--border); }
+</style>
+</head>
+<body>
+
+<div class="modal">
+  <div class="header">
+    <span>OBSERVATORY</span>
+    <span class="close" title="Close">&times;</span>
+  </div>
+
+  <div class="section">
+    <div class="formula-bar">
+      <span class="token">king</span>
+      <span class="op">&minus;</span>
+      <span class="token">man</span>
+      <span class="op">+</span>
+      <span class="token">woman</span>
+      <span class="arrow">&rarr;</span>
+      <span class="result">queen</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">384-DIM VECTOR HEATMAPS (32 BINS)</div>
+    <div class="heatmap-grid">
+      <div class="heatmap-row">
+        <span class="name">king</span>
+        <div class="cells">
+          <div class="cell" style="opacity:0.6"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.8"></div><div class="cell" style="opacity:0.5"></div><div class="cell" style="opacity:0.9"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.7"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.4"></div><div class="cell" style="opacity:0.8"></div><div class="cell" style="opacity:0.5"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.6"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.9"></div><div class="cell" style="opacity:0.4"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.7"></div><div class="cell" style="opacity:0.8"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.5"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.4"></div><div class="cell" style="opacity:0.6"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.7"></div><div class="cell" style="opacity:0.8"></div>
+        </div>
+      </div>
+      <div class="heatmap-row">
+        <span class="name">man</span>
+        <div class="cells">
+          <div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.7"></div><div class="cell" style="opacity:0.5"></div><div class="cell" style="opacity:0.9"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.4"></div><div class="cell" style="opacity:0.8"></div><div class="cell" style="opacity:0.6"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.5"></div><div class="cell" style="opacity:0.7"></div><div class="cell" style="opacity:0.4"></div><div class="cell" style="opacity:0.8"></div><div class="cell" style="opacity:0.9"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.6"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.4"></div><div class="cell" style="opacity:0.5"></div><div class="cell" style="opacity:0.7"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.8"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.4"></div><div class="cell" style="opacity:0.6"></div><div class="cell" style="opacity:0.5"></div><div class="cell" style="opacity:0.9"></div>
+        </div>
+      </div>
+      <div class="heatmap-row">
+        <span class="name">woman</span>
+        <div class="cells">
+          <div class="cell" style="opacity:0.8"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.5"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.7"></div><div class="cell" style="opacity:0.9"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.4"></div><div class="cell" style="opacity:0.6"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.8"></div><div class="cell" style="opacity:0.5"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.4"></div><div class="cell" style="opacity:0.7"></div><div class="cell" style="opacity:0.6"></div><div class="cell" style="opacity:0.9"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.5"></div><div class="cell" style="opacity:0.8"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.4"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.7"></div><div class="cell" style="opacity:0.6"></div><div class="cell" style="opacity:0.9"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.5"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.8"></div>
+        </div>
+      </div>
+      <div class="heatmap-row">
+        <span class="name">result</span>
+        <div class="cells">
+          <div class="cell" style="opacity:0.4"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.7"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.9"></div><div class="cell" style="opacity:0.6"></div><div class="cell" style="opacity:0.8"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.5"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.7"></div><div class="cell" style="opacity:0.4"></div><div class="cell" style="opacity:0.6"></div><div class="cell" style="opacity:0.8"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.5"></div><div class="cell" style="opacity:0.9"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.7"></div><div class="cell" style="opacity:0.4"></div><div class="cell" style="opacity:0.8"></div><div class="cell" style="opacity:0.6"></div><div class="cell" style="opacity:0.2"></div><div class="cell" style="opacity:0.1"></div><div class="cell" style="opacity:0.5"></div><div class="cell" style="opacity:0.3"></div><div class="cell" style="opacity:0.9"></div><div class="cell" style="opacity:0.7"></div><div class="cell" style="opacity:0.4"></div><div class="cell" style="opacity:0.6"></div>
+        </div>
+      </div>
+    </div>
+    <div class="bin-labels">
+      <span>0</span><span></span><span></span><span></span><span></span><span></span><span></span><span>96</span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span>192</span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span>288</span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span>384</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">ARITHMETIC</div>
+    <div class="arithmetic">
+      <span class="sym">V</span>(king) <span class="sym">&minus;</span> <span class="sym">V</span>(man) <span class="sym">+</span> <span class="sym">V</span>(woman) <span class="sym">&asymp;</span> <span class="sym">V</span>(queen)
+      <span class="cosine">cos = 0.874</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">PCA-3 PROJECTION</div>
+    <div class="pca-chip">
+      <span>queen</span> → [x: <span>+2.41</span>  y: <span>&minus;1.03</span>  z: <span>+0.87</span>]
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">TOP-10 NEIGHBORS (COSINE SIMILARITY)</div>
+    <div class="neighbors-table">
+      <div class="row"><span class="rank">1</span><span class="nname">queen</span><div class="bar-wrap"><div class="bar" style="width:87%"></div></div><span class="score">0.874</span></div>
+      <div class="row"><span class="rank">2</span><span class="nname">monarch</span><div class="bar-wrap"><div class="bar" style="width:82%"></div></div><span class="score">0.823</span></div>
+      <div class="row"><span class="rank">3</span><span class="nname">royal family</span><div class="bar-wrap"><div class="bar" style="width:79%"></div></div><span class="score">0.791</span></div>
+      <div class="row"><span class="rank">4</span><span class="nname">sovereign</span><div class="bar-wrap"><div class="bar" style="width:76%"></div></div><span class="score">0.758</span></div>
+      <div class="row"><span class="rank">5</span><span class="nname">regent</span><div class="bar-wrap"><div class="bar" style="width:73%"></div></div><span class="score">0.734</span></div>
+      <div class="row"><span class="rank">6</span><span class="nname">majesty</span><div class="bar-wrap"><div class="bar" style="width:71%"></div></div><span class="score">0.712</span></div>
+      <div class="row"><span class="rank">7</span><span class="nname">throne</span><div class="bar-wrap"><div class="bar" style="width:68%"></div></div><span class="score">0.684</span></div>
+      <div class="row"><span class="rank">8</span><span class="nname">empress</span><div class="bar-wrap"><div class="bar" style="width:65%"></div></div><span class="score">0.651</span></div>
+      <div class="row"><span class="rank">9</span><span class="nname">princess</span><div class="bar-wrap"><div class="bar" style="width:63%"></div></div><span class="score">0.627</span></div>
+      <div class="row"><span class="rank">10</span><span class="nname">crown</span><div class="bar-wrap"><div class="bar" style="width:60%"></div></div><span class="score">0.603</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="footer">
+      <span>model: <span style="color:var(--fg)">all-MiniLM-L6-v2</span></span>
+      <span class="sep">&middot;</span>
+      <span>corpus: <span style="color:var(--fg)">2,847</span> items</span>
+      <span class="sep">&middot;</span>
+      <span>PCA-3 variance explained: <span style="color:var(--fg)">14.2%</span></span>
+      <span class="sep">&middot;</span>
+      <span class="link">tools/generate_corpus.py</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

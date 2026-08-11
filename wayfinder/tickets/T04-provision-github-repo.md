@@ -3,7 +3,7 @@ id: T04
 title: Provision the target GitHub repo
 labels:
   - wayfinder:task
-status: open
+status: closed
 assignee: null
 blocked_by: []
 blocks: []
@@ -21,3 +21,17 @@ Checklist:
 - [ ] Confirm no `CNAME` file is present (custom domain promotion is out of scope until real math lands per Destination)
 
 This is a **task** (not a decision) — manual work that unblocks the staging CI step.
+
+## Resolution
+
+User will provision `detimzhao/detimzhao.dev` manually. Commands locked:
+
+```bash
+gh repo view detimzhao/detimzhao.dev     # confirm existence
+gh repo create detimzhao.dev --public     # if not exists
+gh api repos/detimzhao/detimzhao.dev/pages \
+  --method POST \
+  --input <(echo '{"source":{"branch":"main","path":"/"}}')
+```
+
+Expected staging URL: `https://detimzhao.github.io/detimzhao.dev/`. CNAME file reserved for custom domain promotion after real math lands. Subpath at `/detimzhao.dev/` means absolute paths break — deploy task must use relative paths or `<base>` tag.

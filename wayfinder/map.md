@@ -17,13 +17,22 @@ Ship the Semantic Arithmetic Playground to `detimzhao.dev` with the real math co
 
 ## Decisions so far
 
-*(empty — charting session; no tickets resolved yet)*
+- [T01 — Verify redistribution rights and attribution rules](tickets/T01-verify-redistribution-rights.md) — All five sources permit redistribution; HF needs permissive-license filtering, Wikipedia needs CC BY-SA 4.0 on corpus, arXiv is CC0, PyTorch/scikit-learn are BSD 3-Clause.
+- [T02 — Document per-source fetch strategies](tickets/T02-document-fetch-strategies.md) — Specific API endpoints, pagination, rate limits documented for HF Hub, arXiv, Wikipedia, PyTorch/scikit-learn, terminology lists.
+- [T03 — Document GitHub Releases asset publishing workflow](tickets/T03-document-release-publishing.md) — **GitHub Releases does not serve CORS headers.** Corpus files will be committed to the repo and served from same Pages origin. Overrides PLAN.md Release-asset assumption.
+- [T05 — Lock the corpus item-shape schema](tickets/T05-lock-corpus-item-schema.md) — Per-item schema locked: `id (source-name-slug), name (unique), source, source_url, description (~200 chars), pos, nn[{name, score}]. corpus.json.gz bundles items + pca + model metadata; corpus.vec.f32 is raw binary in same order.`
+- [T08 — Lock the trail object shape](tickets/T08-lock-trail-object-shape.md) — Strategy B: trail-owned source sprites (not cloud-buffer mutation). Shape locked: `{id, formula, sourceIndices[], neighborLabelIndices[], resultPos, resultName|null, glowSprites[], labelSprites[], lines[], resultGlow, resultLabel, opacity}`. Sequential connectors with animated result arrow. Cloud buffer is write-once; trails are independent render layers.
+- [T06 — Lock the loading strategy](tickets/T06-lock-loading-strategy.md) — Two-phase: corpus.json.gz on first visit (cloud renders, black-canvas loading state, no spinner), corpus.vec.f32 lazily on first formula. URL hash with formula triggers parallel fetch of both files; cloud renders first, trail follows. Inline error states (no fallback to WORD_CLUSTERS, no error overlay).
+- [T04 — Provision the target GitHub repo](tickets/T04-provision-github-repo.md) — Repo `detimzhao/detimzhao.dev`, Pages from `main` branch root. Staging URL `https://detimzhao.github.io/detimzhao.dev/`. User provisions manually. No CNAME until custom domain promotion.
+- [T07 — Lock URL hash parameter space](tickets/T07-lock-url-hash-param-space.md) — Params: `f` (formula), `s` (corpus, default/movies/extensible), `debug` (observatory auto-open). Unknown params ignored (forward-compatible). Bare hash accepted for backward compat; canonical output `#f=...`.
+- [T09 — Lock corpus versioning scheme](tickets/T09-lock-release-versioning-scheme.md) — `corpus_version: "1.0"` + `vec_sha256` in model metadata. Regeneration overwrites `data/`, bumps version. Zero hardcoded refs in script.js. Git tag optional garnish.
+- [T10 — Prototype "did you mean" UX](tickets/T10-prototype-did-you-mean-ux.md) — Hybrid A+B: ghost text (inline correction at cursor) + status line (4s discoverability flash). Tab accepts, Enter runs, Esc cancels. Prototype in `wayfinder/prototypes/T10-did-you-mean.html`.
+- [T11 — Prototype observatory layout](tickets/T11-prototype-observatory-layout.md) — Binned heatmap (32 bins), vertical pipeline flow. 6 sections: formula bar, vector heatmaps, arithmetic, PCA-3 chip, top-10 neighbors, footer. Prototype in `wayfinder/prototypes/T11-observatory.html`.
+- [T12 — Prototype info-card layout](tickets/T12-prototype-info-card-layout.md) — 260px card: name (accent) → description (120 chars) → top-5 neighbors (tabular scores) → source (muted). Left-edge cyan accent bar. 3 example cards. Prototype in `wayfinder/prototypes/T12-info-card.html`.
 
 ## Not yet specified
 
 - **Shell absorption**: will the existing Three.js shell structurally accept async `loadCorpus()` + the new render path, or need refactor first? Only visible once Sprint 1 integration is attempted. Graduates when parser/arithmetic ticket resolves.
-- **Vector binary on first paint**: does the cloud render from metadata alone, or do positions need to be inline? Depends on the loading-strategy decision (T06) but rendering performance is foggy until tried.
-- **Trail object redesign**: when sources are individual corpus points (indices) rather than clusters, what does the trail object shape become? Depends on corpus schema decision (T05) and parser/arithmetic resolution.
 
 ## Out of scope
 

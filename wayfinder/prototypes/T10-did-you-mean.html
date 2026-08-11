@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Did You Mean — Prototype</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+  :root {
+    --bg:      #0a0a0a;
+    --surface: oklch(0.13 0.005 260);
+    --fg:      oklch(0.92 0 0);
+    --muted:   oklch(0.40 0 0);
+    --border:  oklch(0.22 0 0);
+    --accent:  oklch(0.77 0.18 200);
+    --accent-dim: oklch(0.77 0.18 200 / 0.4);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+  }
+  .label { font-size: 11px; color: var(--muted); letter-spacing: 0.02em; }
+  .scenario {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    min-width: 420px;
+  }
+  .prompt { color: var(--muted); }
+  .input-inner {
+    position: relative;
+    flex: 1;
+  }
+  .input-inner input {
+    background: none;
+    border: none;
+    color: var(--fg);
+    font-family: inherit;
+    font-size: inherit;
+    width: 100%;
+    outline: none;
+    caret-color: var(--accent);
+    position: relative;
+    z-index: 2;
+  }
+  .ghost {
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--muted);
+    pointer-events: none;
+    z-index: 1;
+    white-space: pre;
+  }
+  .ghost .dim { color: var(--border); }
+  .status-line {
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+    min-height: 18px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .status-line.visible { opacity: 1; }
+  .status-line.error { color: var(--muted); }
+  .keys {
+    display: flex;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .keys span { padding: 2px 6px; border: 1px solid var(--border); }
+  .legend { font-size: 10px; color: var(--muted); text-align: center; line-height: 1.6; }
+  hr { width: 320px; border: none; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<div class="scenario">
+  <div class="label">EXACT MATCH — no ghost</div>
+  <div class="input-wrap">
+    <span class="prompt">&gt;</span>
+    <div class="input-inner">
+      <input value="attention - transformer" readonly>
+    </div>
+  </div>
+  <div class="status-line"></div>
+</div>
+
+<hr>
+
+<div class="scenario">
+  <div class="label">TYPO — ghost + status line</div>
+  <div class="input-wrap">
+    <span class="prompt">&gt;</span>
+    <div class="input-inner">
+      <input value="atention" readonly>
+      <div class="ghost">atent<span class="dim">ion</span></div>
+    </div>
+  </div>
+  <div class="status-line visible">did you mean: attention → (enter to accept)</div>
+</div>
+
+<hr>
+
+<div class="scenario">
+  <div class="label">MULTI-TOKEN — only unrecognized gets ghost</div>
+  <div class="input-wrap">
+    <span class="prompt">&gt;</span>
+    <div class="input-inner">
+      <input value="atention - diffusion" readonly>
+      <div class="ghost">atent<span class="dim">ion</span> - diffusion</div>
+    </div>
+  </div>
+  <div class="status-line visible">did you mean: attention → (enter to accept)</div>
+</div>
+
+<hr>
+
+<div class="scenario">
+  <div class="label">NO MATCH — low similarity</div>
+  <div class="input-wrap">
+    <span class="prompt">&gt;</span>
+    <div class="input-inner">
+      <input value="xyzzy123" readonly>
+    </div>
+  </div>
+  <div class="status-line visible error">token not found: xyzzy123</div>
+</div>
+
+<div class="keys">
+  <span>TAB</span> accept correction
+  <span>ENTER</span> run matched
+  <span>ESC</span> cancel
+</div>
+<div class="legend">
+  Ghost text fades after 4s if unacknowledged.<br>
+  Status line auto-hides after 4s; ghost persists.
+</div>
+
+</body>
+</html>

@@ -3,7 +3,7 @@ id: T10
 title: Prototype the "did you mean" UX
 labels:
   - wayfinder:prototype
-status: open
+status: closed
 assignee: null
 blocked_by: []
 blocks: []
@@ -21,3 +21,20 @@ The project uses the existing `#status-line` element (currently dead code) for i
 - **D.** Something else.
 
 Prototype as a static HTML/CSS snippet (not integrated into the Three.js app — standalone to react to). Keep it cheap: a rough visual sketch that conveys the interaction, not a polished component.
+
+## Resolution
+
+**Hybrid A+B.** Ghost text as persistent indicator (inline, muted, at cursor — Option A). Status line as transient 4s discoverability flash (Option B). Interaction model:
+
+| Trigger | Behavior |
+|---|---|
+| Type unrecognized token | Ghost shows nearest match at cursor |
+| Press Tab | Input fills with correction; ghost + status line clear |
+| Press Enter | Runs the corrected match |
+| Press Esc | Cancels correction; raw input remains |
+| Exact match | No ghost, no status line |
+| Partial prefix match (`atten` for `attention`) | Suppressed — user may be typing it correctly |
+| Multi-token (`atention - man + queen`) | Per-token correction; only unrecognized tokens get ghost |
+| Edit distance > 3 or low similarity | Status line: "token not found: ___" (muted), no ghost |
+
+Prototype artifact: `wayfinder/prototypes/T10-did-you-mean.html`

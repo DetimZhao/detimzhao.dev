@@ -3,7 +3,7 @@ id: T11
 title: Prototype the observatory live-pipeline layout
 labels:
   - wayfinder:prototype
-status: open
+status: closed
 assignee: null
 blocked_by: []
 blocks: []
@@ -27,3 +27,19 @@ The key visual challenge is the 384-d heatmap — that's too many pixels for a s
 - (c) a sparkline-style strip
 
 Prototype as a standalone HTML page (not integrated into the Three.js app). Dark terminal aesthetic per `brand-spec.md`. Show: tokens `king`, `-`, `man`, `+`, `woman` → result `queen` as a concrete case.
+
+## Resolution
+
+**Binned heatmap (32 bins)** — retains dimensional structure, fits ~400px-wide modal, cyan intensity grid reads like `htop` CPU bars. Vertical pipeline flow: tokens → heatmaps → arithmetic → PCA-3 → neighbors → footer.
+
+**Sections (top to bottom):**
+1. Formula bar: `king − man + woman → queen` (tokens muted, operators cyan, result bright)
+2. Vector heatmaps: 4 rows × 32 cells, cyan intensity per bin
+3. Arithmetic: `V(king) − V(man) + V(woman) ≈ V(queen)` + cosine annotation
+4. PCA-3 point chip: `queen → [x: +2.41  y: −1.03  z: +0.87]`
+5. Top-10 neighbors with proportional bars + scores
+6. Footer: model card, corpus size, variance explained, `tools/generate_corpus.py` link
+
+**Mock data**: hardcoded `king − man + woman → queen` with synthetic vectors, scores, coordinates.
+
+Prototype artifact: `wayfinder/prototypes/T11-observatory.html`

@@ -36,11 +36,6 @@ canvas { display: block; }
 }
 
 .input-container {
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
   display: flex;
   align-items: center;
   gap: 0;
@@ -52,6 +47,20 @@ canvas { display: block; }
   max-width: 640px;
   width: clamp(320px, 40vw, 640px);
   transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  pointer-events: auto;
+}
+
+.bottom-bar {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  pointer-events: none;
 }
 
 .input-container:focus-within {
@@ -112,6 +121,53 @@ canvas { display: block; }
 }
 
 .ghost-text.visible { opacity: 0.5; }
+
+.pipeline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+.pipeline.visible { opacity: 0.65; }
+
+.pipe-stage {
+  background: oklch(0.13 0.005 260 / 0.5);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  transition: color 0.5s ease, border-color 0.5s ease, background 0.5s ease;
+}
+
+.pipe-stage.highlight {
+  color: var(--accent);
+  border-color: oklch(1 0 0 / 0.18);
+  background: oklch(0.15 0.02 200 / 0.35);
+}
+
+.pipe-arrow {
+  color: var(--muted);
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.annotation {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+  text-align: center;
+}
+
+.annotation.visible { opacity: 0.45; }
 
 .status-line {
   position: fixed;

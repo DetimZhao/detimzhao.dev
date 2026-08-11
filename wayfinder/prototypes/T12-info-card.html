@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Info Card — Prototype</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+  :root {
+    --bg:      #0a0a0a;
+    --surface: oklch(0.15 0.005 260 / 0.92);
+    --fg:      oklch(0.92 0 0);
+    --muted:   oklch(0.40 0 0);
+    --border:  oklch(0.22 0 0);
+    --accent:  oklch(0.77 0.18 200);
+    --accent-dim: oklch(0.77 0.18 200 / 0.5);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: 40px;
+    flex-wrap: wrap;
+    padding: 40px;
+  }
+  .card {
+    width: 260px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    box-shadow: inset 2px 0 0 var(--accent-dim);
+  }
+  .card-title {
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card-divider { border-bottom: 1px solid var(--border); }
+  .card-desc {
+    padding: 10px 14px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-weight: 400;
+  }
+  .card-neighbors-label {
+    padding: 8px 14px 4px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+  .card-neighbor {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 14px;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+  .card-neighbor .nname {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 140px;
+  }
+  .card-neighbor .score {
+    color: var(--accent-dim);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+  .card-source {
+    padding: 8px 14px 10px;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+    font-weight: 400;
+  }
+  .label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+</style>
+</head>
+<body>
+
+<div class="col">
+  <div class="label">NORMAL CASE — HuggingFace</div>
+  <div class="card">
+    <div class="card-title">transformer</div>
+    <div class="card-divider"></div>
+    <div class="card-desc">A neural network architecture that processes sequential data using self-attention mechanisms instead of recurrence or convolution.</div>
+    <div class="card-divider"></div>
+    <div class="card-neighbors-label">neighbors</div>
+    <div class="card-neighbor"><span class="nname">attention</span><span class="score">0.923</span></div>
+    <div class="card-neighbor"><span class="nname">self-attention</span><span class="score">0.891</span></div>
+    <div class="card-neighbor"><span class="nname">multi-head attention</span><span class="score">0.867</span></div>
+    <div class="card-neighbor"><span class="nname">BERT</span><span class="score">0.834</span></div>
+    <div class="card-neighbor"><span class="nname">encoder-decoder</span><span class="score">0.812</span></div>
+    <div class="card-divider"></div>
+    <div class="card-source">Source: HuggingFace</div>
+  </div>
+</div>
+
+<div class="col">
+  <div class="label">SHORT DESC — Wikipedia, 4 neighbors</div>
+  <div class="card">
+    <div class="card-title">backprop</div>
+    <div class="card-divider"></div>
+    <div class="card-desc">The primary algorithm for training neural networks by computing gradients of the loss function with respect to weights via the chain rule.</div>
+    <div class="card-divider"></div>
+    <div class="card-neighbors-label">neighbors</div>
+    <div class="card-neighbor"><span class="nname">gradient descent</span><span class="score">0.912</span></div>
+    <div class="card-neighbor"><span class="nname">chain rule</span><span class="score">0.867</span></div>
+    <div class="card-neighbor"><span class="nname">stochastic</span><span class="score">0.823</span></div>
+    <div class="card-neighbor"><span class="nname">optimization</span><span class="score">0.791</span></div>
+    <div class="card-divider"></div>
+    <div class="card-source">Source: Wikipedia</div>
+  </div>
+</div>
+
+<div class="col">
+  <div class="label">LONG NAME — arXiv, truncation test</div>
+  <div class="card">
+    <div class="card-title">long short-term memory network</div>
+    <div class="card-divider"></div>
+    <div class="card-desc">A recurrent neural network architecture designed to learn long-term dependencies by using gating mechanisms to control information flow.</div>
+    <div class="card-divider"></div>
+    <div class="card-neighbors-label">neighbors</div>
+    <div class="card-neighbor"><span class="nname">LSTM</span><span class="score">0.944</span></div>
+    <div class="card-neighbor"><span class="nname">GRU</span><span class="score">0.901</span></div>
+    <div class="card-neighbor"><span class="nname">recurrent neural net</span><span class="score">0.876</span></div>
+    <div class="card-neighbor"><span class="nname">bidirectional</span><span class="score">0.843</span></div>
+    <div class="card-neighbor"><span class="nname">sequence modeling</span><span class="score">0.818</span></div>
+    <div class="card-divider"></div>
+    <div class="card-source">Source: arXiv</div>
+  </div>
+</div>
+
+</body>
+</html>
