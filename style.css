@@ -227,6 +227,21 @@ canvas { display: block; }
   border-bottom: 1px solid var(--border);
   max-height: 4.5em;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-dim) transparent;
+}
+
+.info-card-desc::-webkit-scrollbar {
+  width: 4px;
+}
+
+.info-card-desc::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.info-card-desc::-webkit-scrollbar-thumb {
+  background: var(--accent-dim);
+  border-radius: 2px;
 }
 
 .info-card-neighbors-label {
@@ -479,7 +494,7 @@ canvas { display: block; }
 
 .observatory-neighbor-rank {
   width: 28px;
-  color: var(--border);
+  color: var(--muted);
   text-align: right;
   flex-shrink: 0;
 }
@@ -488,6 +503,7 @@ canvas { display: block; }
   width: 180px;
   flex-shrink: 0;
   padding-left: 8px;
+  color: var(--fg);
 }
 
 .observatory-neighbor-bar-wrap {
