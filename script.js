@@ -34,7 +34,6 @@ const formulaInput = document.getElementById('formula-input');
 const ghostText = document.getElementById('ghost-text');
 const inputContainer = document.getElementById('input-container');
 const statusLine = document.getElementById('status-line');
-const loadingEl = document.getElementById('loading');
 const clearBtn = document.getElementById('clear-btn');
 const trailCount = document.getElementById('trail-count');
 const observatoryOverlay = document.getElementById('observatory-overlay');
@@ -256,9 +255,8 @@ function resumeAutoRotate() {
 async function loadCorpusMeta() {
   const res = await fetch(new URL('./data/corpus.json.gz', import.meta.url));
   if (!res.ok) {
-    statusLine.textContent = 'corpus unavailable';
-    statusLine.classList.add('visible');
-    loadingEl.style.display = 'none';
+    ghostText.textContent = 'corpus unavailable';
+    ghostText.classList.add('visible');
     return false;
   }
   const ds = new DecompressionStream('gzip');
@@ -273,7 +271,6 @@ async function loadCorpusMeta() {
   }
   corpusLoaded = true;
   buildPointCloud();
-  loadingEl.style.display = 'none';
   return true;
 }
 
@@ -950,9 +947,14 @@ function parseHashParams(hash) {
   // Check if it's a query-string format (has '=' or '&')
   if (raw.includes('=') || raw.includes('&')) {
     const params = new URLSearchParams(raw);
+    const sParam = params.get('s');
+    const knownParams = new Set(['f', 's', 'debug']);
+    for (const key of params.keys()) {
+      if (!knownParams.has(key)) console.debug('unrecognized hash param:', key);
+    }
     return {
       formula: params.get('f') ? decodeURIComponent(params.get('f')) : null,
-      corpusId: params.get('s') || 'default',
+      corpusId: sParam === 'default' ? 'default' : (sParam ? 'default' : 'default'),
       debug: params.has('debug'),
     };
   }
@@ -1353,13 +1355,16 @@ function animate() {
 let schemaParsed = false;
 async function init() {
   loadFromHash();
+
+  const { formula } = parseHashParams(window.location.hash);
+  const vectorPromise = formula ? loadCorpusVectors() : null;
+
   const ok = await loadCorpusMeta();
   if (!ok) return;
   schemaParsed = true;
 
-  const { formula } = parseHashParams(window.location.hash);
   if (formula) {
-    await ensureVectorsLoaded();
+    await vectorPromise;
     handleFormula(formula);
   }
 
@@ -1369,5 +1374,4 @@ async function init() {
 
 animate();
 formulaInput.focus();
-loadingEl.style.display = 'block';
 init();
