@@ -177,7 +177,7 @@ canvas { display: block; }
   transform: translateX(-50%);
   z-index: 10;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.02em;
   opacity: 0;
   transition: opacity 0.5s ease;
