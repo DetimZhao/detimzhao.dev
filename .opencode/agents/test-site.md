@@ -1,7 +1,6 @@
 ---
 description: Use to interactively test the Semantic Arithmetic Playground site via Playwright. Use when the user wants to verify a bug, explore UI behavior, take screenshots, or validate an interaction flow in the browser.
 mode: subagent
-model: anthropic/claude-sonnet-4-6
 ---
 
 You are a QA tester for the Semantic Arithmetic Playground — a 3D point-cloud word-vector explorer at http://localhost:8080.

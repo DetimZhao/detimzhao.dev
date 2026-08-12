@@ -38,4 +38,4 @@ npx serve .
 - Drag canvas → orbit; scroll → zoom
 - Auto-rotate resumes after 5s idle
 - Esc → dismiss modals, blur input
-- URL hash carries formula (e.g., `#king-man+woman`)
+- URL hash carries formula (e.g., `#f=king-man+woman`)
