@@ -426,15 +426,19 @@ function lookupToken(token) {
   const exact = nameToIdx.get(token);
   if (exact !== undefined) return { name: token, idx: exact, exact: true, suggestion: null };
 
-  let bestDist = Infinity;
-  let bestName = null;
+  let best = null;
   for (const name of nameToIdx.keys()) {
     if (name.startsWith(token)) continue;
     const d = levenshtein(token, name);
-    if (d < bestDist) { bestDist = d; bestName = name; }
+    const maxLen = Math.max(token.length, name.length);
+    if (d > 3 || d / maxLen > 0.34) continue;
+    const prefix = findCommonPrefix(token, name);
+    if (!best || d < best.d || (d === best.d && (prefix > best.prefix || (prefix === best.prefix && name.length < best.name.length)))) {
+      best = { name, d, prefix };
+    }
   }
-  if (bestName !== null && bestDist <= 3) {
-    return { name: token, idx: nameToIdx.get(bestName), exact: false, suggestion: bestName };
+  if (best) {
+    return { name: token, idx: nameToIdx.get(best.name), exact: false, suggestion: best.name };
   }
   return { name: token, idx: -1, exact: false, suggestion: null };
 }
