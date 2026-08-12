@@ -73,11 +73,11 @@ scene.add(lineGroup);
 const spriteGroup = new THREE.Group();
 scene.add(spriteGroup);
 
-let pointCloud = null;
-let geometry = null;
-let positions = null;
-let colors = null;
-let positionCount = 0;
+let corpusPoints = null;
+let scatterPoints = null;
+let corpusGeometry = null;
+let corpusColors = null;
+let corpusCount = 0;
 
 // ===== Textures =====
 function createCircleTexture() {
@@ -167,6 +167,9 @@ let ripples = [];
 let autoRotatePaused = false;
 let autoRotateTimer = 0;
 let clickRingSprite = null;
+let hoverRingSprite = null;
+let hoveredIdx = -1;
+let savedHoverColor = null;
 
 function spawnClickRing(position) {
   removeClickRing();
@@ -190,6 +193,31 @@ function removeClickRing() {
     clickRingSprite.material.map.dispose();
     clickRingSprite.material.dispose();
     clickRingSprite = null;
+  }
+}
+
+function showHoverRing(position) {
+  if (!hoverRingSprite) {
+    const mat = new THREE.SpriteMaterial({
+      map: createRingTexture(),
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      depthTest: false,
+      transparent: true,
+      opacity: 0.55,
+    });
+    hoverRingSprite = new THREE.Sprite(mat);
+    spriteGroup.add(hoverRingSprite);
+  }
+  hoverRingSprite.position.copy(position);
+}
+
+function hideHoverRing() {
+  if (hoverRingSprite) {
+    spriteGroup.remove(hoverRingSprite);
+    hoverRingSprite.material.map.dispose();
+    hoverRingSprite.material.dispose();
+    hoverRingSprite = null;
   }
 }
 
@@ -306,41 +334,9 @@ function randomInSphere(radius) {
 function buildPointCloud() {
   const N = corpusItems.length;
   const filler = Math.max(0, MIN_POINTS - N);
-  const total = N + filler;
-  const posArr = new Float32Array(total * 3);
-  const colArr = new Float32Array(total * 3);
+  corpusCount = N;
 
-  for (let i = 0; i < N; i++) {
-    const p = corpusItems[i].pos;
-    posArr[i * 3] = p[0];
-    posArr[i * 3 + 1] = p[1];
-    posArr[i * 3 + 2] = p[2];
-    const b = 0.04 + Math.random() * 0.10;
-    colArr[i * 3] = b;
-    colArr[i * 3 + 1] = b;
-    colArr[i * 3 + 2] = b;
-  }
-
-  for (let i = N; i < total; i++) {
-    const [x, y, z] = randomInSphere(VOLUME_RADIUS);
-    posArr[i * 3] = x;
-    posArr[i * 3 + 1] = y;
-    posArr[i * 3 + 2] = z;
-    const b = 0.015 + Math.random() * 0.035;
-    colArr[i * 3] = b;
-    colArr[i * 3 + 1] = b;
-    colArr[i * 3 + 2] = b;
-  }
-
-  positions = posArr;
-  colors = colArr;
-  positionCount = total;
-
-  geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-  const material = new THREE.PointsMaterial({
+  const mat = new THREE.PointsMaterial({
     size: 0.22,
     map: pointTexture,
     vertexColors: true,
@@ -350,8 +346,44 @@ function buildPointCloud() {
     transparent: true,
   });
 
-  pointCloud = new THREE.Points(geometry, material);
-  scene.add(pointCloud);
+  const cPos = new Float32Array(N * 3);
+  const cCol = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++) {
+    const p = corpusItems[i].pos;
+    cPos[i * 3] = p[0];
+    cPos[i * 3 + 1] = p[1];
+    cPos[i * 3 + 2] = p[2];
+    const b = 0.04 + Math.random() * 0.10;
+    cCol[i * 3] = b;
+    cCol[i * 3 + 1] = b;
+    cCol[i * 3 + 2] = b;
+  }
+  corpusColors = cCol;
+  corpusGeometry = new THREE.BufferGeometry();
+  corpusGeometry.setAttribute('position', new THREE.BufferAttribute(cPos, 3));
+  corpusGeometry.setAttribute('color', new THREE.BufferAttribute(cCol, 3));
+  corpusPoints = new THREE.Points(corpusGeometry, mat);
+  scene.add(corpusPoints);
+
+  if (filler > 0) {
+    const sPos = new Float32Array(filler * 3);
+    const sCol = new Float32Array(filler * 3);
+    for (let i = 0; i < filler; i++) {
+      const [x, y, z] = randomInSphere(VOLUME_RADIUS);
+      sPos[i * 3] = x;
+      sPos[i * 3 + 1] = y;
+      sPos[i * 3 + 2] = z;
+      const b = 0.015 + Math.random() * 0.035;
+      sCol[i * 3] = b;
+      sCol[i * 3 + 1] = b;
+      sCol[i * 3 + 2] = b;
+    }
+    const sGeom = new THREE.BufferGeometry();
+    sGeom.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+    sGeom.setAttribute('color', new THREE.BufferAttribute(sCol, 3));
+    scatterPoints = new THREE.Points(sGeom, mat);
+    scene.add(scatterPoints);
+  }
 }
 
 // ===== Math Core =====
@@ -825,12 +857,13 @@ async function handleFormula(formula) {
 
 // ===== Click Handling =====
 function getWorldPointAtScreen(x, y) {
-  if (!pointCloud) return null;
+  if (!corpusPoints) return null;
   mouse.x = (x / window.innerWidth) * 2 - 1;
   mouse.y = -(y / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObject(pointCloud);
+  const intersects = raycaster.intersectObject(corpusPoints);
   if (intersects.length > 0) {
+    intersects.sort((a, b) => a.distanceToRay - b.distanceToRay);
     return intersects.map(hit => ({ point: hit.point.clone(), idx: hit.index }));
   }
   return null;
@@ -904,6 +937,8 @@ function hideInfoCard() {
   infoCardTarget = null;
   removeClickRing();
   resumeAutoRotate();
+  if (hoveredIdx >= 0) restoreHoverColor();
+  renderer.domElement.style.cursor = '';
 }
 
 // ===== URL Hash =====
@@ -1136,6 +1171,52 @@ renderer.domElement.addEventListener('click', (e) => {
   showInfoCard(hit.point, corpusItems[hit.idx], hit.idx, e.clientX, e.clientY);
 });
 
+function restoreHoverColor() {
+  if (hoveredIdx < 0 || !savedHoverColor || !corpusColors) return;
+  corpusColors[hoveredIdx * 3] = savedHoverColor[0];
+  corpusColors[hoveredIdx * 3 + 1] = savedHoverColor[1];
+  corpusColors[hoveredIdx * 3 + 2] = savedHoverColor[2];
+  if (corpusGeometry && corpusGeometry.attributes.color) corpusGeometry.attributes.color.needsUpdate = true;
+  hideHoverRing();
+  hoveredIdx = -1;
+  savedHoverColor = null;
+}
+
+renderer.domElement.addEventListener('pointermove', (e) => {
+  if (!corpusLoaded || infoCardVisible || !corpusPoints) {
+    if (hoveredIdx >= 0) restoreHoverColor();
+    renderer.domElement.style.cursor = '';
+    return;
+  }
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObject(corpusPoints);
+  if (intersects.length === 0) {
+    if (hoveredIdx >= 0) restoreHoverColor();
+    renderer.domElement.style.cursor = '';
+    return;
+  }
+  let best = intersects[0];
+  for (let i = 1; i < intersects.length; i++) {
+    if (intersects[i].distanceToRay < best.distanceToRay) best = intersects[i];
+  }
+  if (best.index === hoveredIdx) return;
+
+  if (hoveredIdx >= 0) restoreHoverColor();
+
+  hoveredIdx = best.index;
+  const i = best.index * 3;
+  savedHoverColor = [corpusColors[i], corpusColors[i + 1], corpusColors[i + 2]];
+  const factor = 3.5;
+  corpusColors[i] = Math.min(1, savedHoverColor[0] * factor);
+  corpusColors[i + 1] = Math.min(1, savedHoverColor[1] * factor);
+  corpusColors[i + 2] = Math.min(1, savedHoverColor[2] * factor);
+  if (corpusGeometry && corpusGeometry.attributes.color) corpusGeometry.attributes.color.needsUpdate = true;
+  renderer.domElement.style.cursor = 'pointer';
+  showHoverRing(best.point);
+});
+
 helpBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   showObservatory();
@@ -1197,8 +1278,8 @@ function animate() {
   controls.target.lerp(cameraTarget, cameraLerpSpeed);
   controls.update();
 
-  if (geometry && geometry.attributes.color) {
-    geometry.attributes.color.needsUpdate = true;
+  if (corpusGeometry && corpusGeometry.attributes.color) {
+    corpusGeometry.attributes.color.needsUpdate = true;
   }
 
   const now = Date.now();
@@ -1255,6 +1336,12 @@ function animate() {
     const dist = camera.position.distanceTo(clickRingSprite.position);
     const s = dist * 0.013 + Math.sin(now * 0.005) * 0.02;
     clickRingSprite.scale.set(s, s, 1);
+  }
+
+  if (hoverRingSprite) {
+    const dist = camera.position.distanceTo(hoverRingSprite.position);
+    const s = dist * 0.026 + Math.sin(now * 0.005) * 0.03;
+    hoverRingSprite.scale.set(s, s, 1);
   }
 
   renderer.render(scene, camera);
