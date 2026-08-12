@@ -225,10 +225,8 @@ canvas { display: block; }
   padding-bottom: 6px;
   margin-bottom: 6px;
   border-bottom: 1px solid var(--border);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  max-height: 4.5em;
+  overflow-y: auto;
 }
 
 .info-card-neighbors-label {
