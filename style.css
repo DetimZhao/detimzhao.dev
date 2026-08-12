@@ -225,7 +225,18 @@ canvas { display: block; }
   padding-bottom: 6px;
   margin-bottom: 6px;
   border-bottom: 1px solid var(--border);
-  display: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.info-card-neighbors-label {
+  padding: 8px 0 4px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.02em;
 }
 
 .info-card-list {
