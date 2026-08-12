@@ -899,7 +899,7 @@ function parseHashParams(hash) {
 function serializeHash(formula, corpusId) {
   if (!formula) return '';
   const params = new URLSearchParams();
-  params.set('f', encodeURIComponent(formula));
+  params.set('f', formula);
   if (corpusId && corpusId !== 'default') params.set('s', corpusId);
   return '#' + params.toString();
 }
