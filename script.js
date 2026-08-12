@@ -77,6 +77,7 @@ let pointCloud = null;
 let geometry = null;
 let positions = null;
 let colors = null;
+let positionCount = 0;
 
 // ===== Textures =====
 function createCircleTexture() {
@@ -287,17 +288,45 @@ async function ensureVectorsLoaded() {
 }
 
 // ===== Point Cloud =====
+const MIN_POINTS = 3000;
+
+function randomInSphere(radius) {
+  const u = Math.random();
+  const v = Math.random();
+  const theta = 2 * Math.PI * u;
+  const phi = Math.acos(2 * v - 1);
+  const r = radius * Math.cbrt(Math.random());
+  return [
+    r * Math.sin(phi) * Math.cos(theta),
+    r * Math.sin(phi) * Math.sin(theta),
+    r * Math.cos(phi),
+  ];
+}
+
 function buildPointCloud() {
   const N = corpusItems.length;
-  const posArr = new Float32Array(N * 3);
-  const colArr = new Float32Array(N * 3);
+  const filler = Math.max(0, MIN_POINTS - N);
+  const total = N + filler;
+  const posArr = new Float32Array(total * 3);
+  const colArr = new Float32Array(total * 3);
 
   for (let i = 0; i < N; i++) {
     const p = corpusItems[i].pos;
     posArr[i * 3] = p[0];
     posArr[i * 3 + 1] = p[1];
     posArr[i * 3 + 2] = p[2];
-    const b = 0.015 + Math.random() * 0.035;
+    const b = 0.025 + Math.random() * 0.06;
+    colArr[i * 3] = b;
+    colArr[i * 3 + 1] = b;
+    colArr[i * 3 + 2] = b;
+  }
+
+  for (let i = N; i < total; i++) {
+    const [x, y, z] = randomInSphere(VOLUME_RADIUS);
+    posArr[i * 3] = x;
+    posArr[i * 3 + 1] = y;
+    posArr[i * 3 + 2] = z;
+    const b = 0.008 + Math.random() * 0.025;
     colArr[i * 3] = b;
     colArr[i * 3 + 1] = b;
     colArr[i * 3 + 2] = b;
@@ -305,13 +334,14 @@ function buildPointCloud() {
 
   positions = posArr;
   colors = colArr;
+  positionCount = total;
 
   geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
   const material = new THREE.PointsMaterial({
-    size: 0.22,
+    size: 0.15,
     map: pointTexture,
     vertexColors: true,
     blending: THREE.AdditiveBlending,
