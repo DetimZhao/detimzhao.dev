@@ -8,6 +8,7 @@ and writes the augmented corpus files.
 
 import argparse
 import gzip
+import hashlib
 import json
 import logging
 import sys
@@ -324,6 +325,10 @@ def main():
     model_meta["corpus_count"] = total
     model_meta["terminology_added"] = len(new_items)
 
+    # Compute vector-file integrity hash before writing metadata
+    vec_bytes = all_vectors.astype(np.float32).tobytes()
+    model_meta["vec_sha256"] = hashlib.sha256(vec_bytes).hexdigest()
+
     # Write output
     output = {
         "items": all_items,
@@ -340,7 +345,8 @@ def main():
         json.dump(output, f, ensure_ascii=False, separators=(",", ":"))
 
     log.info("Writing corpus.vec.f32 (%d × %d) ...", total, EMBEDDING_DIM)
-    all_vectors.astype(np.float32).tofile(vec_path)
+    with open(vec_path, "wb") as f:
+        f.write(vec_bytes)
 
     size_mb = corpus_path.stat().st_size / (1024 * 1024)
     log.info("Done. %d items, corpus.json.gz: %.1f MB", total, size_mb)

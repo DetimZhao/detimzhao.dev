@@ -17,10 +17,10 @@ Run through these interaction flows and report what works vs what breaks:
 ### Formula input
 1. Navigate to http://localhost:8080
 2. Type `attention` → Enter. Verify: trail count shows "1 trail", URL hash is `#attention`, input container has `active` class.
-3. Type `king - man + woman` → Enter. Verify: trail shows, URL hash updated, observatory shows pipeline.
+3. Type `attention - diffusion + RAG` → Enter. Verify: trail shows, URL hash updated, observatory shows pipeline.
 4. Type `pizza` → Enter. Verify: no trail created (invalid word = silent).
 5. Type `/clear` → Enter. Verify: all trails gone, URL hash cleared, trail count hidden.
-6. Type `king man` (2 words, no operator) → Enter. Verify: nothing happens (unsupported pattern).
+6. Type `attention diffusion` (2 words, no operator) → Enter. Verify: nothing happens (unsupported pattern).
 7. Click the × button. Verify: clears all trails, resets URL.
 
 ### Observatory modal
@@ -38,7 +38,7 @@ Run through these interaction flows and report what works vs what breaks:
 15. Take a screenshot after entering `king - man + woman`. Report whether trails/connectors render.
 
 ### Edge cases
-16. Test `king - man + computer` — verify the observatory does NOT say queen (bug: it currently always says queen).
+16. Test `transformer - attention + convolution` — verify the result is a sensible nearest neighbor, not a hardcoded word (regression: old prototype always returned "queen" regardless of inputs).
 17. Test resize: resize browser to 375×812 (iPhone) and check input container doesn't overflow.
 18. Test rapid formula entry (3 quick Enters with different words). Verify trails accumulate/dim correctly.
 

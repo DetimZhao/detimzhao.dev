@@ -392,20 +392,27 @@ function buildPointCloud() {
 
 // ===== Math Core =====
 function parseFormula(raw) {
-  const parts = raw.toLowerCase().trim().split(/\s+/);
+  const trimmed = raw.toLowerCase().trim();
+  const parts = trimmed.split(/\s+/);
+  if (parts.length === 1) return { tokens: parts, ops: [] };
+
   const tokens = [];
   const ops = [];
+  let valid = true;
   for (let i = 0; i < parts.length; i++) {
     if (i % 2 === 0) {
       tokens.push(parts[i]);
+    } else if (parts[i] === '+' || parts[i] === '-') {
+      ops.push(parts[i]);
     } else {
-      if (parts[i] === '+' || parts[i] === '-') {
-        ops.push(parts[i]);
-      }
+      valid = false;
+      break;
     }
   }
-  if (tokens.length === ops.length + 1) return { tokens, ops };
-  return { tokens: [raw.toLowerCase().trim()], ops: [] };
+  if (valid && ops.length > 0 && tokens.length === ops.length + 1) {
+    return { tokens, ops };
+  }
+  return { tokens: [trimmed], ops: [] };
 }
 
 function levenshtein(a, b) {
