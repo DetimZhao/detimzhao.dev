@@ -264,6 +264,11 @@ async function loadCorpusMeta() {
   const decompressed = await new Response(res.body.pipeThrough(ds)).text();
   const data = JSON.parse(decompressed);
   corpusItems = data.items;
+  for (const item of corpusItems) {
+    if (item.nn && item.nn.length > 0 && Array.isArray(item.nn[0])) {
+      item.nn = item.nn.map(([name, score]) => ({ name, score }));
+    }
+  }
   corpusPCA = data.pca;
   corpusModel = data.model;
   nameToIdx = new Map();

@@ -318,7 +318,7 @@ def main():
     all_names = [item["name"] for item in all_items]
     nn_results = compute_nn(all_vectors, all_names)
     for i, item in enumerate(all_items):
-        item["nn"] = [[name, round(score, 4)] for name, score in nn_results[i]]
+        item["nn"] = [{"name": name, "score": round(score, 4)} for name, score in nn_results[i]]
 
     # Update model metadata
     model_meta["corpus_count"] = total
