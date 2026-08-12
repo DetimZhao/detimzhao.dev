@@ -1,172 +1,48 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-const TOTAL_POINTS = 5000;
+// ===== Config =====
+const MAX_TRAILS = 10;
 const VOLUME_RADIUS = 14;
 const ACCENT_COLOR = new THREE.Color('#00d4ff');
 const ACCENT_BRIGHT = new THREE.Color('#33eeff');
 const ACCENT_DIM = new THREE.Color('#006d78');
 
-const WORD_CLUSTERS = {
-  attention: {
-    center: [5.5, 2.0, -4.0],
-    radius: 2.0,
-    neighbors: [
-      { word: 'self-attention', sim: 0.94 },
-      { word: 'multi-head attention', sim: 0.91 },
-      { word: 'positional encoding', sim: 0.82 },
-      { word: 'transformer', sim: 0.87 },
-      { word: 'QKV', sim: 0.84 },
-      { word: 'encoder', sim: 0.79 },
-      { word: 'decoder', sim: 0.76 },
-      { word: 'feed-forward', sim: 0.72 },
-      { word: 'layer norm', sim: 0.70 },
-      { word: 'residual', sim: 0.68 },
-      { word: 'dropout', sim: 0.65 },
-      { word: 'softmax', sim: 0.73 },
-      { word: 'embedding', sim: 0.69 },
-      { word: 'tokenization', sim: 0.71 },
-      { word: 'inference', sim: 0.67 },
-      { word: 'fine-tuning', sim: 0.64 },
-      { word: 'pretraining', sim: 0.62 },
-      { word: 'cross-attention', sim: 0.80 },
-      { word: 'masked attention', sim: 0.77 },
-      { word: 'scaled dot-product', sim: 0.81 },
-    ],
-  },
-  king: {
-    center: [-5.0, 1.5, 3.0],
-    radius: 1.6,
-    neighbors: [
-      { word: 'monarch', sim: 0.88 },
-      { word: 'throne', sim: 0.81 },
-      { word: 'sovereign', sim: 0.79 },
-      { word: 'majesty', sim: 0.74 },
-      { word: 'royalty', sim: 0.85 },
-      { word: 'emperor', sim: 0.82 },
-      { word: 'ruler', sim: 0.77 },
-      { word: 'kingdom', sim: 0.72 },
-      { word: 'reign', sim: 0.70 },
-      { word: 'dynasty', sim: 0.68 },
-    ],
-  },
-  man: {
-    center: [-7.2, -0.3, 4.5],
-    radius: 1.4,
-    neighbors: [
-      { word: 'male', sim: 0.92 },
-      { word: 'gentleman', sim: 0.84 },
-      { word: 'husband', sim: 0.79 },
-      { word: 'father', sim: 0.76 },
-      { word: 'boy', sim: 0.72 },
-      { word: 'brother', sim: 0.74 },
-      { word: 'son', sim: 0.71 },
-      { word: 'he', sim: 0.68 },
-      { word: 'masculine', sim: 0.80 },
-      { word: 'sir', sim: 0.75 },
-    ],
-  },
-  woman: {
-    center: [-2.8, 0.2, 2.2],
-    radius: 1.4,
-    neighbors: [
-      { word: 'female', sim: 0.92 },
-      { word: 'lady', sim: 0.85 },
-      { word: 'wife', sim: 0.80 },
-      { word: 'mother', sim: 0.77 },
-      { word: 'girl', sim: 0.74 },
-      { word: 'sister', sim: 0.73 },
-      { word: 'daughter', sim: 0.71 },
-      { word: 'she', sim: 0.69 },
-      { word: 'feminine', sim: 0.82 },
-      { word: 'madam', sim: 0.76 },
-    ],
-  },
-  queen: {
-    center: [-0.5, 3.0, 5.0],
-    radius: 1.2,
-    neighbors: [
-      { word: 'monarch', sim: 0.94 },
-      { word: 'princess', sim: 0.89 },
-      { word: 'royal', sim: 0.86 },
-      { word: 'crown', sim: 0.83 },
-      { word: 'throne', sim: 0.80 },
-      { word: 'majesty', sim: 0.78 },
-      { word: 'sovereign', sim: 0.76 },
-      { word: 'empress', sim: 0.81 },
-      { word: 'regent', sim: 0.74 },
-      { word: 'dynasty', sim: 0.71 },
-    ],
-  },
-  computer: {
-    center: [3.0, -2.5, -2.0],
-    radius: 1.6,
-    neighbors: [
-      { word: 'laptop', sim: 0.90 },
-      { word: 'hardware', sim: 0.85 },
-      { word: 'software', sim: 0.82 },
-      { word: 'processor', sim: 0.79 },
-      { word: 'machine', sim: 0.76 },
-      { word: 'desktop', sim: 0.73 },
-      { word: 'server', sim: 0.70 },
-      { word: 'device', sim: 0.74 },
-      { word: 'terminal', sim: 0.71 },
-      { word: 'computation', sim: 0.68 },
-    ],
-  },
-  language: {
-    center: [-3.5, -3.0, -3.5],
-    radius: 1.8,
-    neighbors: [
-      { word: 'speech', sim: 0.88 },
-      { word: 'syntax', sim: 0.84 },
-      { word: 'grammar', sim: 0.82 },
-      { word: 'semantics', sim: 0.86 },
-      { word: 'translation', sim: 0.79 },
-      { word: 'linguistics', sim: 0.81 },
-      { word: 'dialect', sim: 0.74 },
-      { word: 'phonetics', sim: 0.72 },
-      { word: 'lexicon', sim: 0.77 },
-      { word: 'morphology', sim: 0.70 },
-    ],
-  },
-  neural: {
-    center: [1.0, -1.0, -6.0],
-    radius: 1.5,
-    neighbors: [
-      { word: 'network', sim: 0.90 },
-      { word: 'deep learning', sim: 0.87 },
-      { word: 'gradient', sim: 0.82 },
-      { word: 'backprop', sim: 0.79 },
-      { word: 'weights', sim: 0.76 },
-      { word: 'activation', sim: 0.73 },
-      { word: 'perceptron', sim: 0.71 },
-      { word: 'convolution', sim: 0.70 },
-      { word: 'recurrent', sim: 0.68 },
-      { word: 'dropout', sim: 0.66 },
-    ],
-  },
-};
+// ===== Corpus State =====
+let corpusItems = null;
+let corpusVectors = null;
+let corpusPCA = null;
+let corpusModel = null;
+let nameToIdx = null;
+let corpusLoaded = false;
+let vectorsLoaded = false;
+let lastFormula = null;
+let lastFormulaTokens = [];
+let lastFormulaOps = [];
+let lastFormulaResultName = null;
+let lastFormulaResultVec = null;
+let lastFormulaResultNeighbors = null;
 
-const RAY_POINTS = {};
-const BG_POINT_INDICES = [];
+// ===== DOM Refs =====
+const infoCard = document.getElementById('info-card');
+const infoCardWord = document.getElementById('info-card-word');
+const infoCardDesc = document.getElementById('info-card-desc');
+const infoCardList = document.getElementById('info-card-list');
+const infoCardSource = document.getElementById('info-card-source');
+const helpBtn = document.getElementById('help-btn');
+const formulaInput = document.getElementById('formula-input');
+const ghostText = document.getElementById('ghost-text');
+const inputContainer = document.getElementById('input-container');
+const statusLine = document.getElementById('status-line');
+const loadingEl = document.getElementById('loading');
+const clearBtn = document.getElementById('clear-btn');
+const trailCount = document.getElementById('trail-count');
+const observatoryOverlay = document.getElementById('observatory-overlay');
+const observatoryPanel = document.getElementById('observatory-panel');
+const pipeline = document.getElementById('pipeline');
+const pipelineAnnotation = document.getElementById('annotation');
 
-function setupRayPoints() {
-  let idx = 0;
-  for (const [word, cluster] of Object.entries(WORD_CLUSTERS)) {
-    const n = Math.floor(cluster.neighbors.length * 2.5) + 15;
-    for (let i = 0; i < n; i++) {
-      RAY_POINTS[idx + i] = word;
-    }
-    idx += n;
-  }
-  for (let i = idx; i < TOTAL_POINTS; i++) {
-    BG_POINT_INDICES.push(i);
-  }
-}
-
-setupRayPoints();
-
+// ===== Three.js Setup =====
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -192,67 +68,17 @@ controls.enablePan = true;
 controls.enableZoom = true;
 controls.zoomSpeed = 0.8;
 
-const positions = new Float32Array(TOTAL_POINTS * 3);
-const colors = new Float32Array(TOTAL_POINTS * 3);
+const lineGroup = new THREE.Group();
+scene.add(lineGroup);
+const spriteGroup = new THREE.Group();
+scene.add(spriteGroup);
 
-function randomInSphere(radius) {
-  const u = Math.random();
-  const v = Math.random();
-  const theta = 2 * Math.PI * u;
-  const phi = Math.acos(2 * v - 1);
-  const r = radius * Math.cbrt(Math.random());
-  return [
-    r * Math.sin(phi) * Math.cos(theta),
-    r * Math.sin(phi) * Math.sin(theta),
-    r * Math.cos(phi),
-  ];
-}
+let pointCloud = null;
+let geometry = null;
+let positions = null;
+let colors = null;
 
-function randomNear(center, radius) {
-  const [cx, cy, cz] = center;
-  const [dx, dy, dz] = randomInSphere(radius);
-  return [cx + dx, cy + dy, cz + dz];
-}
-
-const BASE_COLORS = new Float32Array(TOTAL_POINTS * 3);
-
-let pi = 0;
-for (const [, cluster] of Object.entries(WORD_CLUSTERS)) {
-  const nPoints = Math.floor(cluster.neighbors.length * 2.5) + 15;
-  for (let i = 0; i < nPoints; i++) {
-    const [x, y, z] = randomNear(cluster.center, cluster.radius);
-    positions[pi * 3] = x;
-    positions[pi * 3 + 1] = y;
-    positions[pi * 3 + 2] = z;
-    const b = 0.04 + Math.random() * 0.10;
-    colors[pi * 3] = b;
-    colors[pi * 3 + 1] = b;
-    colors[pi * 3 + 2] = b;
-    BASE_COLORS[pi * 3] = b;
-    BASE_COLORS[pi * 3 + 1] = b;
-    BASE_COLORS[pi * 3 + 2] = b;
-    pi++;
-  }
-}
-
-for (let i = pi; i < TOTAL_POINTS; i++) {
-  const [x, y, z] = randomInSphere(VOLUME_RADIUS);
-  positions[i * 3] = x;
-  positions[i * 3 + 1] = y;
-  positions[i * 3 + 2] = z;
-  const b = 0.015 + Math.random() * 0.035;
-  colors[i * 3] = b;
-  colors[i * 3 + 1] = b;
-  colors[i * 3 + 2] = b;
-  BASE_COLORS[i * 3] = b;
-  BASE_COLORS[i * 3 + 1] = b;
-  BASE_COLORS[i * 3 + 2] = b;
-}
-
-const geometry = new THREE.BufferGeometry();
-geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
+// ===== Textures =====
 function createCircleTexture() {
   const size = 64;
   const canvas = document.createElement('canvas');
@@ -269,27 +95,6 @@ function createCircleTexture() {
   return new THREE.CanvasTexture(canvas);
 }
 
-const pointTexture = createCircleTexture();
-
-const pointMaterial = new THREE.PointsMaterial({
-  size: 0.22,
-  map: pointTexture,
-  vertexColors: true,
-  blending: THREE.AdditiveBlending,
-  depthWrite: false,
-  sizeAttenuation: true,
-  transparent: true,
-});
-
-const pointCloud = new THREE.Points(geometry, pointMaterial);
-scene.add(pointCloud);
-
-const lineGroup = new THREE.Group();
-scene.add(lineGroup);
-
-const spriteGroup = new THREE.Group();
-scene.add(spriteGroup);
-
 function createGlowTexture(innerColor, outerColor, size) {
   const canvas = document.createElement('canvas');
   canvas.width = size;
@@ -305,15 +110,19 @@ function createGlowTexture(innerColor, outerColor, size) {
   return new THREE.CanvasTexture(canvas);
 }
 
-const glowTexture = createGlowTexture('rgba(0,229,255,0.7)', 'rgba(0,229,255,0)', 128);
-const glowTextureBright = createGlowTexture('rgba(0,255,255,0.9)', 'rgba(0,229,255,0)', 128);
-const glowSpriteMaterial = new THREE.SpriteMaterial({
-  map: glowTexture,
-  blending: THREE.AdditiveBlending,
-  depthWrite: false,
-  depthTest: true,
-  transparent: true,
-});
+function createRingTexture() {
+  const size = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = 'rgba(0,212,255,0.4)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2 - 24, 0, Math.PI * 2);
+  ctx.stroke();
+  return new THREE.CanvasTexture(canvas);
+}
 
 function createLabelTexture(text, opacity) {
   const canvas = document.createElement('canvas');
@@ -333,50 +142,29 @@ function createLabelTexture(text, opacity) {
   return tex;
 }
 
+const pointTexture = createCircleTexture();
+const glowTexture = createGlowTexture('rgba(0,229,255,0.7)', 'rgba(0,229,255,0)', 128);
+const glowTextureBright = createGlowTexture('rgba(0,255,255,0.9)', 'rgba(0,229,255,0)', 128);
+const glowSpriteMaterial = new THREE.SpriteMaterial({
+  map: glowTexture,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+  depthTest: true,
+  transparent: true,
+});
+
+// ===== Mouse / Click =====
 const raycaster = new THREE.Raycaster();
 raycaster.params.Points.threshold = 2.0;
 const mouse = new THREE.Vector2();
 
 let cameraTarget = new THREE.Vector3(0, 0, 0);
 let cameraLerpSpeed = 0.03;
-
-const infoCard = document.getElementById('info-card');
-const infoCardWord = document.getElementById('info-card-word');
-const infoCardList = document.getElementById('info-card-list');
-const helpBtn = document.getElementById('help-btn');
-const formulaInput = document.getElementById('formula-input');
-const ghostText = document.getElementById('ghost-text');
-const inputContainer = document.getElementById('input-container');
-const statusLine = document.getElementById('status-line');
-const loadingEl = document.getElementById('loading');
-const clearBtn = document.getElementById('clear-btn');
-const trailCount = document.getElementById('trail-count');
-const observatoryOverlay = document.getElementById('observatory-overlay');
-const observatoryPanel = document.getElementById('observatory-panel');
-const pipeline = document.getElementById('pipeline');
-const pipelineAnnotation = document.getElementById('annotation');
-
 let infoCardTarget = null;
 let infoCardVisible = false;
-
 let ripples = [];
 let autoRotatePaused = false;
 let autoRotateTimer = 0;
-
-function createRingTexture() {
-  const size = 128;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  ctx.strokeStyle = 'rgba(0,212,255,0.5)';
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size / 2 - 16, 0, Math.PI * 2);
-  ctx.stroke();
-  return new THREE.CanvasTexture(canvas);
-}
-
 let clickRingSprite = null;
 
 function spawnClickRing(position) {
@@ -385,7 +173,7 @@ function spawnClickRing(position) {
     map: createRingTexture(),
     blending: THREE.AdditiveBlending,
     depthWrite: false,
-    depthTest: true,
+    depthTest: false,
     transparent: true,
   });
   clickRingSprite = new THREE.Sprite(mat);
@@ -409,7 +197,7 @@ function spawnRipple(position) {
     map: glowTextureBright,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
-    depthTest: true,
+    depthTest: false,
     transparent: true,
     opacity: 0.3,
   });
@@ -417,7 +205,7 @@ function spawnRipple(position) {
   sprite.position.copy(position);
   sprite.scale.set(0.15, 0.15, 1);
   spriteGroup.add(sprite);
-  ripples.push({ sprite, age: 0, maxAge: 600 });
+  ripples.push({ sprite, age: 0, maxAge: 1000 });
 }
 
 function pauseAutoRotate() {
@@ -435,28 +223,354 @@ function resumeAutoRotate() {
   }
 }
 
-const MAX_TRAILS = 10;
-let trails = [];
-let lastFormula = null;
-let lastFormulaTokens = [];
-let lastFormulaOps = [];
-let lastFormulaResultWord = null;
+// ===== Loading =====
+async function loadCorpusMeta() {
+  const res = await fetch(new URL('./data/corpus.json.gz', import.meta.url));
+  if (!res.ok) {
+    statusLine.textContent = 'corpus unavailable';
+    statusLine.classList.add('visible');
+    loadingEl.style.display = 'none';
+    return false;
+  }
+  const ds = new DecompressionStream('gzip');
+  const decompressed = await new Response(res.body.pipeThrough(ds)).text();
+  const data = JSON.parse(decompressed);
+  corpusItems = data.items;
+  corpusPCA = data.pca;
+  corpusModel = data.model;
+  nameToIdx = new Map();
+  for (let i = 0; i < corpusItems.length; i++) {
+    nameToIdx.set(corpusItems[i].name, i);
+  }
+  corpusLoaded = true;
+  buildPointCloud();
+  loadingEl.style.display = 'none';
+  return true;
+}
 
-function createTrailObject(formula, resultWord) {
+let vectorsPromise = null;
+
+async function loadCorpusVectors() {
+  if (vectorsLoaded) return true;
+  if (vectorsPromise) return vectorsPromise;
+  vectorsPromise = fetch(new URL('./data/corpus.vec.f32', import.meta.url)).then(async (res) => {
+    if (!res.ok) {
+      vectorsPromise = null;
+      statusLine.textContent = 'vector data unavailable — try again';
+      statusLine.classList.add('visible');
+      statusLine.classList.add('error');
+      setTimeout(() => statusLine.classList.remove('visible', 'error'), 4000);
+      return false;
+    }
+    const buf = await res.arrayBuffer();
+    corpusVectors = new Float32Array(buf);
+    vectorsLoaded = true;
+
+    if (corpusModel && corpusModel.vec_sha256) {
+      const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+      const hashHex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      if (hashHex !== corpusModel.vec_sha256) {
+        console.error('corpus.vec.f32 integrity check failed');
+      }
+    }
+    return true;
+  }).catch(() => {
+    vectorsPromise = null;
+    return false;
+  });
+  return vectorsPromise;
+}
+
+async function ensureVectorsLoaded() {
+  if (!vectorsLoaded) return loadCorpusVectors();
+  return true;
+}
+
+// ===== Point Cloud =====
+function buildPointCloud() {
+  const N = corpusItems.length;
+  const posArr = new Float32Array(N * 3);
+  const colArr = new Float32Array(N * 3);
+
+  for (let i = 0; i < N; i++) {
+    const p = corpusItems[i].pos;
+    posArr[i * 3] = p[0];
+    posArr[i * 3 + 1] = p[1];
+    posArr[i * 3 + 2] = p[2];
+    const b = 0.015 + Math.random() * 0.035;
+    colArr[i * 3] = b;
+    colArr[i * 3 + 1] = b;
+    colArr[i * 3 + 2] = b;
+  }
+
+  positions = posArr;
+  colors = colArr;
+
+  geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+  const material = new THREE.PointsMaterial({
+    size: 0.22,
+    map: pointTexture,
+    vertexColors: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true,
+    transparent: true,
+  });
+
+  pointCloud = new THREE.Points(geometry, material);
+  scene.add(pointCloud);
+}
+
+// ===== Math Core =====
+function parseFormula(raw) {
+  const parts = raw.toLowerCase().trim().split(/\s+/);
+  const tokens = [];
+  const ops = [];
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 2 === 0) {
+      tokens.push(parts[i]);
+    } else {
+      if (parts[i] === '+' || parts[i] === '-') {
+        ops.push(parts[i]);
+      }
+    }
+  }
+  if (tokens.length === ops.length + 1) return { tokens, ops };
+  return { tokens: [raw.toLowerCase().trim()], ops: [] };
+}
+
+function levenshtein(a, b) {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+  const matrix = [];
+  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+function lookupToken(token) {
+  if (!nameToIdx) return null;
+  const exact = nameToIdx.get(token);
+  if (exact !== undefined) return { name: token, idx: exact, exact: true, suggestion: null };
+
+  let bestDist = Infinity;
+  let bestName = null;
+  for (const name of nameToIdx.keys()) {
+    if (name.startsWith(token)) continue;
+    const d = levenshtein(token, name);
+    if (d < bestDist) { bestDist = d; bestName = name; }
+  }
+  if (bestName !== null && bestDist <= 3) {
+    return { name: token, idx: nameToIdx.get(bestName), exact: false, suggestion: bestName };
+  }
+  return { name: token, idx: -1, exact: false, suggestion: null };
+}
+
+function computeResult(tokens, ops) {
+  if (!vectorsLoaded || !corpusVectors) return null;
+  const DIM = 384;
+  const N = corpusVectors.length / DIM;
+  const result = new Float32Array(DIM);
+
+  let idx0 = nameToIdx.get(tokens[0]);
+  if (idx0 === undefined || idx0 >= N) return null;
+  for (let d = 0; d < DIM; d++) result[d] = corpusVectors[idx0 * DIM + d];
+
+  for (let i = 0; i < ops.length; i++) {
+    const idx = nameToIdx.get(tokens[i + 1]);
+    if (idx === undefined || idx >= N) return null;
+    const sign = ops[i] === '-' ? -1 : 1;
+    for (let d = 0; d < DIM; d++) result[d] += sign * corpusVectors[idx * DIM + d];
+  }
+  return result;
+}
+
+function nearestNeighbors(vec, k) {
+  if (!vectorsLoaded || !corpusVectors || !corpusItems) return [];
+  const DIM = 384;
+  const N = corpusVectors.length / DIM;
+  const heap = [];
+  let vNorm = 0;
+  for (let d = 0; d < DIM; d++) vNorm += vec[d] * vec[d];
+  vNorm = Math.sqrt(vNorm) || 1;
+
+  for (let i = 0; i < N; i++) {
+    let dot = 0;
+    let iNorm = 0;
+    for (let d = 0; d < DIM; d++) {
+      dot += vec[d] * corpusVectors[i * DIM + d];
+      iNorm += corpusVectors[i * DIM + d] * corpusVectors[i * DIM + d];
+    }
+    iNorm = Math.sqrt(iNorm) || 1;
+    const score = dot / (vNorm * iNorm);
+    heap.push({ idx: i, name: corpusItems[i].name, score });
+    heap.sort((a, b) => b.score - a.score);
+    if (heap.length > k) heap.length = k;
+  }
+  return heap;
+}
+
+function projectVec(vec) {
+  if (!corpusPCA) return [0, 0, 0];
+  const DIM = 384;
+  const mean = corpusPCA.mean;
+  const components = corpusPCA.components;
+  const centered = new Float32Array(DIM);
+  for (let d = 0; d < DIM; d++) centered[d] = vec[d] - mean[d];
+  const result = [0, 0, 0];
+  for (let c = 0; c < 3; c++) {
+    for (let d = 0; d < DIM; d++) result[c] += centered[d] * components[c][d];
+  }
+  return result;
+}
+
+// ===== Trail Rendering =====
+let trails = [];
+
+function createTrailObject(formula) {
   return {
     id: Date.now(),
     formula,
-    resultWord,
+    sourceIndices: [],
+    neighborLabelIndices: [],
+    resultPos: null,
+    resultName: null,
     glowSprites: [],
     labelSprites: [],
     lines: [],
-    highlightedIndices: new Set(),
     resultGlow: null,
     resultLabel: null,
-    resultPoint: null,
     opacity: 1.0,
-    sourceClusters: [],
   };
+}
+
+function addSourceGlow(idx, trail) {
+  const p = corpusItems[idx].pos;
+  const pos = new THREE.Vector3(p[0], p[1], p[2]);
+  const mat = new THREE.SpriteMaterial({
+    map: glowTextureBright,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    depthTest: true,
+    transparent: true,
+    opacity: 0.25,
+  });
+  const sprite = new THREE.Sprite(mat);
+  sprite.position.copy(pos);
+  sprite.scale.set(2.2, 2.2, 1);
+  spriteGroup.add(sprite);
+  trail.glowSprites.push(sprite);
+
+  const innerMat = new THREE.SpriteMaterial({
+    map: glowTexture,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    depthTest: true,
+    transparent: true,
+    opacity: 0.45,
+  });
+  const innerSprite = new THREE.Sprite(innerMat);
+  innerSprite.position.copy(pos);
+  innerSprite.scale.set(0.8, 0.8, 1);
+  spriteGroup.add(innerSprite);
+  trail.glowSprites.push(innerSprite);
+
+  return sprite;
+}
+
+function addConnectorBetween(a, b, trail, bright) {
+  const dir = new THREE.Vector3().copy(b).sub(a);
+  const len = dir.length();
+  if (len < 0.01) return null;
+  const mid = new THREE.Vector3().copy(a).add(b).multiplyScalar(0.5);
+  const geom = new THREE.CylinderGeometry(0.01, 0.015, len, 6, 1);
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    blending: THREE.NormalBlending,
+    depthWrite: false,
+    depthTest: false,
+    transparent: true,
+    opacity: bright ? 0.95 : 0.7,
+  });
+  const mesh = new THREE.Mesh(geom, mat);
+  mesh.position.copy(mid);
+  const up = new THREE.Vector3(0, 1, 0);
+  const quat = new THREE.Quaternion().setFromUnitVectors(up, dir.normalize());
+  mesh.setRotationFromQuaternion(quat);
+  mesh.renderOrder = 999;
+  lineGroup.add(mesh);
+  trail.lines.push(mesh);
+
+  const dotGeom = new THREE.SphereGeometry(0.04, 6, 4);
+  const dotMat = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    blending: THREE.NormalBlending,
+    depthWrite: false,
+    depthTest: false,
+    transparent: true,
+    opacity: bright ? 0.9 : 0.6,
+  });
+  const dotA = new THREE.Mesh(dotGeom, dotMat);
+  dotA.position.copy(a);
+  dotA.renderOrder = 1000;
+  lineGroup.add(dotA);
+  trail.lines.push(dotA);
+
+  const dotB = new THREE.Mesh(dotGeom, dotMat);
+  dotB.position.copy(b);
+  dotB.renderOrder = 1000;
+  lineGroup.add(dotB);
+  trail.lines.push(dotB);
+
+  return mesh;
+}
+
+function addLabelAt(position, text, opacity, trail) {
+  const tex = createLabelTexture(text, opacity);
+  const mat = new THREE.SpriteMaterial({
+    map: tex,
+    blending: THREE.NormalBlending,
+    depthWrite: false,
+    depthTest: false,
+    transparent: true,
+    alphaTest: 0.01,
+    opacity: 0.8,
+  });
+  const sprite = new THREE.Sprite(mat);
+  sprite.position.copy(position).add(new THREE.Vector3(0, 0.35, 0));
+  sprite.scale.set(3.5, 0.875, 1);
+  spriteGroup.add(sprite);
+  trail.labelSprites.push(sprite);
+  return sprite;
+}
+
+function addResultGlow(pos, trail) {
+  const mat = new THREE.SpriteMaterial({
+    map: glowTextureBright,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    depthTest: true,
+    transparent: true,
+    opacity: 0.7,
+  });
+  const sprite = new THREE.Sprite(mat);
+  sprite.position.copy(pos);
+  sprite.scale.set(1.6, 1.6, 1);
+  spriteGroup.add(sprite);
+  trail.resultGlow = sprite;
+  return sprite;
 }
 
 function dimAllTrails() {
@@ -499,16 +613,11 @@ function dimAllTrails() {
 function evictTrails() {
   while (trails.length > MAX_TRAILS) {
     const removed = trails.shift();
-    removed.glowSprites.forEach(s => spriteGroup.remove(s));
-    removed.labelSprites.forEach(s => spriteGroup.remove(s));
-    removed.lines.forEach(l => lineGroup.remove(l));
-    if (removed.resultGlow) spriteGroup.remove(removed.resultGlow);
-    if (removed.resultLabel) spriteGroup.remove(removed.resultLabel);
-    for (const idx of removed.highlightedIndices) {
-      colors[idx * 3] = BASE_COLORS[idx * 3];
-      colors[idx * 3 + 1] = BASE_COLORS[idx * 3 + 1];
-      colors[idx * 3 + 2] = BASE_COLORS[idx * 3 + 2];
-    }
+    removed.glowSprites.forEach(s => { spriteGroup.remove(s); s.material.dispose(); });
+    removed.labelSprites.forEach(s => { spriteGroup.remove(s); if (s.material.map) s.material.map.dispose(); s.material.dispose(); });
+    removed.lines.forEach(l => { lineGroup.remove(l); l.geometry.dispose(); l.material.dispose(); });
+    if (removed.resultGlow) { spriteGroup.remove(removed.resultGlow); removed.resultGlow.material.dispose(); }
+    if (removed.resultLabel) { spriteGroup.remove(removed.resultLabel); removed.resultLabel.material.map.dispose(); removed.resultLabel.material.dispose(); }
   }
 }
 
@@ -516,22 +625,19 @@ function clearAllTrails() {
   removeClickRing();
   hideInfoCard();
   for (const trail of trails) {
-    trail.glowSprites.forEach(s => spriteGroup.remove(s));
-    trail.labelSprites.forEach(s => spriteGroup.remove(s));
-    trail.lines.forEach(l => lineGroup.remove(l));
-    if (trail.resultGlow) spriteGroup.remove(trail.resultGlow);
-    if (trail.resultLabel) spriteGroup.remove(trail.resultLabel);
-    for (const idx of trail.highlightedIndices) {
-      colors[idx * 3] = BASE_COLORS[idx * 3];
-      colors[idx * 3 + 1] = BASE_COLORS[idx * 3 + 1];
-      colors[idx * 3 + 2] = BASE_COLORS[idx * 3 + 2];
-    }
+    trail.glowSprites.forEach(s => { spriteGroup.remove(s); s.material.dispose(); });
+    trail.labelSprites.forEach(s => { spriteGroup.remove(s); if (s.material.map) s.material.map.dispose(); s.material.dispose(); });
+    trail.lines.forEach(l => { lineGroup.remove(l); l.geometry.dispose(); l.material.dispose(); });
+    if (trail.resultGlow) { spriteGroup.remove(trail.resultGlow); trail.resultGlow.material.dispose(); }
+    if (trail.resultLabel) { spriteGroup.remove(trail.resultLabel); trail.resultLabel.material.map.dispose(); trail.resultLabel.material.dispose(); }
   }
   trails = [];
   lastFormula = null;
   lastFormulaTokens = [];
   lastFormulaOps = [];
-  lastFormulaResultWord = null;
+  lastFormulaResultName = null;
+  lastFormulaResultVec = null;
+  lastFormulaResultNeighbors = null;
   updateTrailCount();
   updateURLHash('');
   inputContainer.classList.remove('active');
@@ -542,6 +648,7 @@ function clearAllTrails() {
 
 function updateTrailCount() {
   if (trails.length === 0) {
+    trailCount.textContent = '';
     trailCount.classList.remove('visible');
   } else {
     trailCount.textContent = `${trails.length} trail${trails.length !== 1 ? 's' : ''}`;
@@ -549,327 +656,143 @@ function updateTrailCount() {
   }
 }
 
-function addGlowAt(position, bright, trail) {
-  const mat = bright
-    ? new THREE.SpriteMaterial({
-        map: glowTextureBright,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        depthTest: true,
-        transparent: true,
-        opacity: 0.6,
-      })
-    : glowSpriteMaterial.clone();
-  const sprite = new THREE.Sprite(mat);
-  sprite.position.copy(position);
-  sprite.scale.set(bright ? 1.2 : 0.7, bright ? 1.2 : 0.7, 1);
-  spriteGroup.add(sprite);
-  trail.glowSprites.push(sprite);
-  return sprite;
-}
+// ===== Formula Handling =====
+async function handleFormula(formula) {
+  if (!schemaParsed) return;
+  const { tokens, ops } = parseFormula(formula);
 
-function addLabelAt(position, text, opacity, trail) {
-  const tex = createLabelTexture(text, opacity);
-  const mat = new THREE.SpriteMaterial({
-    map: tex,
-    blending: THREE.NormalBlending,
-    depthWrite: false,
-    depthTest: false,
-    transparent: true,
-    alphaTest: 0.01,
-    opacity: 0.8,
-  });
-  const sprite = new THREE.Sprite(mat);
-  sprite.position.copy(position).add(new THREE.Vector3(0, 0.35, 0));
-  sprite.scale.set(3.5, 0.875, 1);
-  spriteGroup.add(sprite);
-  trail.labelSprites.push(sprite);
-  return sprite;
-}
-
-function addConnectorBetween(a, b, trail) {
-  const dir = new THREE.Vector3().copy(b).sub(a);
-  const len = dir.length();
-  const mid = new THREE.Vector3().copy(a).add(b).multiplyScalar(0.5);
-  const geom = new THREE.CylinderGeometry(0.01, 0.015, len, 6, 1);
-  const mat = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
-    blending: THREE.NormalBlending,
-    depthWrite: false,
-    depthTest: false,
-    transparent: true,
-    opacity: 0.85,
-  });
-  const mesh = new THREE.Mesh(geom, mat);
-  mesh.position.copy(mid);
-  const up = new THREE.Vector3(0, 1, 0);
-  const quat = new THREE.Quaternion().setFromUnitVectors(up, dir.normalize());
-  mesh.setRotationFromQuaternion(quat);
-  mesh.renderOrder = 999;
-  lineGroup.add(mesh);
-  trail.lines.push(mesh);
-
-  const dotGeom = new THREE.SphereGeometry(0.04, 6, 4);
-  const dotMat = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
-    blending: THREE.NormalBlending,
-    depthWrite: false,
-    depthTest: false,
-    transparent: true,
-    opacity: 0.9,
-  });
-  const dotA = new THREE.Mesh(dotGeom, dotMat);
-  dotA.position.copy(a);
-  dotA.renderOrder = 1000;
-  lineGroup.add(dotA);
-  trail.lines.push(dotA);
-
-  const dotB = new THREE.Mesh(dotGeom, dotMat);
-  dotB.position.copy(b);
-  dotB.renderOrder = 1000;
-  lineGroup.add(dotB);
-  trail.lines.push(dotB);
-
-  return mesh;
-}
-
-function getClusterPointPositions(clusterKey) {
-  const cluster = WORD_CLUSTERS[clusterKey];
-  const pts = [];
-  const center = new THREE.Vector3(...cluster.center);
-  pts.push({ pos: center, word: clusterKey, isCenter: true });
-  for (let idx in RAY_POINTS) {
-    if (RAY_POINTS[idx] === clusterKey) {
-      const i = parseInt(idx);
-      if (!pts.find(p => p.pos.distanceTo(new THREE.Vector3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2])) < 0.01)) {
-        pts.push({ pos: new THREE.Vector3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]), word: null, isCenter: false });
-      }
-    }
-  }
-  return pts;
-}
-
-function brightenCluster(clusterKey, maxNeighbors, trail) {
-  const cluster = WORD_CLUSTERS[clusterKey];
-  if (!cluster) return;
-  const nDisplay = Math.min(maxNeighbors || cluster.neighbors.length, cluster.neighbors.length);
-
-  for (let idx in RAY_POINTS) {
-    if (RAY_POINTS[idx] === clusterKey) {
-      const i = parseInt(idx);
-      trail.highlightedIndices.add(i);
-    }
-  }
-
-  const sortedPts = [];
-  for (let idx in RAY_POINTS) {
-    if (RAY_POINTS[idx] === clusterKey) {
-      const i = parseInt(idx);
-      const pos = new THREE.Vector3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
-      const dist = pos.distanceTo(new THREE.Vector3(...cluster.center));
-      sortedPts.push({ idx: i, pos, dist });
-    }
-  }
-  sortedPts.sort((a, b) => a.dist - b.dist);
-
-  for (let i = 0; i < sortedPts.length; i++) {
-    const { idx } = sortedPts[i];
-    const t = 1 - (i / sortedPts.length);
-    const bright = t > 0.85;
-    const c = bright ? ACCENT_BRIGHT : ACCENT_COLOR.clone().multiplyScalar(0.4 + t * 0.6);
-    colors[idx * 3] = c.r;
-    colors[idx * 3 + 1] = c.g;
-    colors[idx * 3 + 2] = c.b;
-
-    if (i < nDisplay + 1 && i > 0 && sortedPts[i].dist > 0.02) {
-      const centerPos = new THREE.Vector3(...cluster.center);
-      addConnectorBetween(centerPos, sortedPts[i].pos, trail);
-    }
-  }
-
-  const centerPos = new THREE.Vector3(...cluster.center);
-  addGlowAt(centerPos, true, trail);
-
-  const nHalo = Math.min(8, sortedPts.length);
-  for (let i = 0; i < nHalo; i++) {
-    const { pos } = sortedPts[i];
-    if (pos.distanceTo(centerPos) < 0.01) continue;
-    const haloMat = new THREE.SpriteMaterial({
-      map: glowTexture,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      depthTest: true,
-      transparent: true,
-      opacity: 0.12 + (1 - i / nHalo) * 0.18,
-    });
-    const halo = new THREE.Sprite(haloMat);
-    halo.position.copy(pos);
-    halo.scale.set(0.45, 0.45, 1);
-    spriteGroup.add(halo);
-    trail.glowSprites.push(halo);
-  }
-
-  for (let i = 0; i < Math.min(nDisplay, 5); i++) {
-    const neighbor = cluster.neighbors[i];
-    const dir = new THREE.Vector3(
-      (Math.random() - 0.5) * cluster.radius * 1.5,
-      (Math.random() - 0.5) * cluster.radius * 1.5,
-      (Math.random() - 0.5) * cluster.radius * 1.5,
-    );
-    const labelPos = centerPos.clone().add(dir).add(new THREE.Vector3(0, 0.3, 0));
-    addLabelAt(labelPos, neighbor.word, 0.8, trail);
-  }
-
-  cameraTarget.copy(centerPos);
-  cameraLerpSpeed = 0.03;
-}
-
-function handleFormula(formula) {
-  const parts = formula.toLowerCase().trim().split(/\s+/);
-
-  if (parts.length === 1) {
-    const word = parts[0];
-    const clusterKey = Object.keys(WORD_CLUSTERS).find(k => k.toLowerCase() === word);
-    if (clusterKey) {
-      const trail = createTrailObject(formula, clusterKey);
-      brightenCluster(clusterKey, 20, trail);
-      trail.sourceClusters.push(clusterKey);
-      trails.push(trail);
-      evictTrails();
-      dimAllTrails();
-      lastFormula = formula;
-      lastFormulaTokens = [clusterKey];
-      lastFormulaOps = [];
-      lastFormulaResultWord = clusterKey;
-      inputContainer.classList.add('active');
-      updateURLHash(formula);
-      showPipeline();
-      setPipelineStage(3);
-      setPipelineAnnotation(`single-word lookup — nearest neighbors by cosine similarity`);
+  if (tokens.length === 1) {
+    const result = lookupToken(tokens[0]);
+    if (!result || result.idx < 0) {
+      inputContainer.classList.remove('active');
       return;
     }
-    inputContainer.classList.remove('active');
-    hidePipeline();
+    const trail = createTrailObject(formula);
+    trail.sourceIndices.push(result.idx);
+    const itemName = corpusItems[result.idx].name;
+    trail.resultName = itemName;
+    trail.resultPos = new THREE.Vector3(corpusItems[result.idx].pos[0], corpusItems[result.idx].pos[1], corpusItems[result.idx].pos[2]);
+    addSourceGlow(result.idx, trail);
+
+    const item = corpusItems[result.idx];
+    const topN = Math.min((item.nn || []).length, 5);
+    for (let k = 0; k < topN; k++) {
+      const nnIdx = nameToIdx.get(item.nn[k].name);
+      if (nnIdx !== undefined) {
+        trail.neighborLabelIndices.push(nnIdx);
+        const nnPos = new THREE.Vector3(corpusItems[nnIdx].pos[0], corpusItems[nnIdx].pos[1], corpusItems[nnIdx].pos[2]);
+        addLabelAt(nnPos, item.nn[k].name, 0.8, trail);
+      }
+    }
+    addResultGlow(trail.resultPos, trail);
+    trail.resultLabel = addLabelAt(trail.resultPos.clone().add(new THREE.Vector3(0, 0.5, 0)), itemName, 0.95, trail);
+
+    trails.push(trail);
+    evictTrails();
+    dimAllTrails();
+    lastFormula = formula;
+    lastFormulaTokens = [itemName];
+    lastFormulaOps = [];
+    lastFormulaResultName = result.name;
+    lastFormulaResultVec = null;
+    lastFormulaResultNeighbors = item.nn || [];
+    inputContainer.classList.add('active');
+    updateURLHash(formula);
+    showPipeline();
+    setPipelineStage(3);
+    setPipelineAnnotation('single-word lookup — nearest neighbors by cosine similarity');
+    cameraTarget.copy(trail.resultPos);
+    cameraLerpSpeed = 0.03;
     return;
   }
 
-  if (parts.length >= 3) {
-    const op1 = parts[0];
-    const op = parts[1];
-    const op2 = parts[2];
+  // Multi-token: need vectors
+  const vOk = await ensureVectorsLoaded();
+  if (!vOk) return;
 
-    if (op === '-' || op === '+') {
-      const c1 = Object.keys(WORD_CLUSTERS).find(k => k.toLowerCase() === op1);
-      const c2 = Object.keys(WORD_CLUSTERS).find(k => k.toLowerCase() === op2);
-
-      const trail = createTrailObject(formula, null);
-
-      if (c1) {
-        brightenCluster(c1, 3, trail);
-        trail.sourceClusters.push(c1);
-      }
-      if (c2) {
-        brightenCluster(c2, 3, trail);
-        trail.sourceClusters.push(c2);
-      }
-
-      if (c1 && c2) {
-        const pos1 = new THREE.Vector3(...WORD_CLUSTERS[c1].center);
-        const pos2 = new THREE.Vector3(...WORD_CLUSTERS[c2].center);
-
-        const mid = pos1.clone().add(pos2).multiplyScalar(0.5);
-
-        addConnectorBetween(pos1, pos2, trail);
-
-        if (parts.length >= 5) {
-          const op3 = parts[3];
-          const op4 = parts[4];
-          const c3 = Object.keys(WORD_CLUSTERS).find(k => k.toLowerCase() === op4);
-          if (c3) {
-            brightenCluster(c3, 3, trail);
-            trail.sourceClusters.push(c3);
-            const pos3 = new THREE.Vector3(...WORD_CLUSTERS[c3].center);
-            addConnectorBetween(mid, pos3, trail);
-
-            const resultOffset = pos1.clone().sub(pos2).add(pos3);
-            trail.resultPoint = resultOffset;
-            trail.resultWord = c3;
-
-            const resultMat = new THREE.SpriteMaterial({
-              map: glowTextureBright,
-              blending: THREE.AdditiveBlending,
-              depthWrite: false,
-              depthTest: true,
-              transparent: true,
-              opacity: 0.7,
-            });
-            trail.resultGlow = new THREE.Sprite(resultMat);
-            trail.resultGlow.position.copy(resultOffset);
-            trail.resultGlow.scale.set(1.6, 1.6, 1);
-            spriteGroup.add(trail.resultGlow);
-
-            const queenCluster = WORD_CLUSTERS['queen'];
-            if (queenCluster) {
-              const qCenter = new THREE.Vector3(...queenCluster.center);
-              cameraTarget.copy(qCenter);
-              cameraLerpSpeed = 0.025;
-
-              for (let i = 0; i < Math.min(queenCluster.neighbors.length, 10); i++) {
-                const n = queenCluster.neighbors[i];
-                const dirOff = new THREE.Vector3(
-                  (Math.random() - 0.5) * 2.5,
-                  (Math.random() - 0.5) * 2.5,
-                  (Math.random() - 0.5) * 2.5,
-                );
-                const labelPos = qCenter.clone().add(dirOff);
-                addLabelAt(labelPos, n.word, 0.8, trail);
-              }
-
-              trail.resultLabel = addLabelAt(qCenter.clone().add(new THREE.Vector3(0, 0.5, 0)), 'queen', 0.95, trail);
-              trail.resultWord = 'queen';
-            }
-
-            lastFormulaTokens = [c1, c2, c3];
-            lastFormulaOps = [op, op3];
-            lastFormulaResultWord = 'queen';
-          }
-        } else {
-          lastFormulaTokens = [c1, c2];
-          lastFormulaOps = [op];
-          lastFormulaResultWord = null;
-        }
-
-        trails.push(trail);
-        evictTrails();
-        dimAllTrails();
-        lastFormula = formula;
-        inputContainer.classList.add('active');
-        updateURLHash(formula);
-        showPipeline();
-        if (lastFormulaResultWord) {
-          setPipelineStage(3);
-          const opStr = lastFormulaTokens.length >= 3
-            ? `${lastFormulaTokens[0]} ${lastFormulaOps[0]} ${lastFormulaTokens[1]} ${lastFormulaOps[1] || '+'} ${lastFormulaTokens[2]}`
-            : `${lastFormulaTokens.join(` ${lastFormulaOps[0]} `)}`;
-          setPipelineAnnotation(`vector arithmetic: ${opStr} = ${lastFormulaResultWord} — top-10 neighbors`);
-        } else {
-          setPipelineStage(1);
-          setPipelineAnnotation(`vector arithmetic: ${lastFormulaTokens.join(` ${op} `)}`);
-        }
-        return;
-      }
-
-      trails.push(trail);
-      evictTrails();
-      dimAllTrails();
-      return;
-    }
+  const resolved = tokens.map(t => lookupToken(t));
+  const allResolved = resolved.every(r => r && r.idx >= 0);
+  if (!allResolved) {
+    inputContainer.classList.remove('active');
+    return;
   }
 
-  inputContainer.classList.remove('active');
+  const trail = createTrailObject(formula);
+  const resolvedNames = resolved.map(r => r.suggestion || r.name);
+
+  // Source glows + indices
+  const sourcePositions = [];
+  for (const r of resolved) {
+    trail.sourceIndices.push(r.idx);
+    addSourceGlow(r.idx, trail);
+    const p = corpusItems[r.idx].pos;
+    sourcePositions.push(new THREE.Vector3(p[0], p[1], p[2]));
+  }
+
+  // Sequential connectors
+  for (let i = 1; i < sourcePositions.length; i++) {
+    addConnectorBetween(sourcePositions[i - 1], sourcePositions[i], trail, false);
+  }
+
+  // Compute result vector using resolved names (post did-you-mean)
+  const resultVec = computeResult(resolvedNames, ops);
+  if (!resultVec) {
+    inputContainer.classList.remove('active');
+    return;
+  }
+  const resultPos3 = projectVec(resultVec);
+  const resultPos = new THREE.Vector3(resultPos3[0], resultPos3[1], resultPos3[2]);
+  trail.resultPos = resultPos;
+
+  // Animated result arrow
+  if (sourcePositions.length > 0) {
+    addConnectorBetween(sourcePositions[sourcePositions.length - 1], resultPos, trail, true);
+  }
+
+  // Nearest neighbors
+  const neighbors = nearestNeighbors(resultVec, 10);
+  lastFormulaResultNeighbors = neighbors;
+
+  const topName = neighbors.length > 0 ? neighbors[0].name : null;
+  trail.resultName = topName;
+  addResultGlow(resultPos, trail);
+  if (topName) {
+    trail.resultLabel = addLabelAt(resultPos.clone().add(new THREE.Vector3(0, 0.5, 0)), topName, 0.95, trail);
+  }
+
+  const topK = Math.min(neighbors.length, 5);
+  for (let k = 0; k < topK; k++) {
+    trail.neighborLabelIndices.push(neighbors[k].idx);
+    const nnPos = new THREE.Vector3(corpusItems[neighbors[k].idx].pos[0], corpusItems[neighbors[k].idx].pos[1], corpusItems[neighbors[k].idx].pos[2]);
+    addLabelAt(nnPos, neighbors[k].name, 0.8, trail);
+  }
+
+  trails.push(trail);
+  evictTrails();
+  dimAllTrails();
+  lastFormula = formula;
+  lastFormulaTokens = resolvedNames;
+  lastFormulaOps = ops;
+  lastFormulaResultName = topName;
+  lastFormulaResultVec = resultVec;
+  inputContainer.classList.add('active');
+  updateURLHash(formula);
+  showPipeline();
+  const exprStr = resolvedNames.reduce((s, t, i) => s + t + (i < ops.length ? ' ' + ops[i] + ' ' : ''), '');
+  if (topName) {
+    setPipelineStage(3);
+    setPipelineAnnotation(`vector arithmetic: ${exprStr} → ${topName}`);
+  } else {
+    setPipelineStage(1);
+    setPipelineAnnotation(`vector arithmetic: ${exprStr}`);
+  }
+  cameraTarget.copy(resultPos);
+  cameraLerpSpeed = 0.025;
 }
 
+// ===== Click Handling =====
 function getWorldPointAtScreen(x, y) {
+  if (!pointCloud) return null;
   mouse.x = (x / window.innerWidth) * 2 - 1;
   mouse.y = -(y / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
@@ -880,28 +803,59 @@ function getWorldPointAtScreen(x, y) {
   return null;
 }
 
-function showInfoCard(worldPos, word) {
-  const vec = worldPos.clone().project(camera);
-  const x = (vec.x * 0.5 + 0.5) * window.innerWidth;
-  const y = (-vec.y * 0.5 + 0.5) * window.innerHeight;
+function clampCardPosition(px, py) {
+  const M = 12;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const cw = infoCard.offsetWidth || 220;
+  const ch = infoCard.offsetHeight || 180;
 
-  infoCard.style.left = `${x}px`;
-  infoCard.style.top = `${y}px`;
-  infoCardWord.textContent = word;
+  const roomAbove = py - M;
+  const roomBelow = h - py - M;
+  const roomLeft = px - M;
+  const roomRight = w - px - M;
 
-  const cluster = WORD_CLUSTERS[word];
+  const yDir = (roomAbove >= ch + 16 || roomAbove >= roomBelow) ? 'above' : 'below';
+  const xAlign = roomLeft < cw / 2 ? 'left' : (roomRight < cw / 2 ? 'right' : 'center');
+
+  let tx, ty;
+  if (xAlign === 'left') tx = '0';
+  else if (xAlign === 'right') tx = '-100%';
+  else tx = '-50%';
+
+  if (yDir === 'above') ty = 'calc(-100% - 16px)';
+  else ty = '16px';
+
+  infoCard.style.transform = `translate(${tx}, ${ty}) scale(0.8)`;
+  infoCard.style.left = `${px}px`;
+  infoCard.style.top = `${py}px`;
+}
+
+function showInfoCard(worldPos, item, idx, screenX, screenY) {
+  const px = Math.max(0, Math.min(window.innerWidth, screenX));
+  const py = Math.max(0, Math.min(window.innerHeight, screenY));
+
+  infoCardWord.textContent = item.name;
+
+  let desc = item.description || '';
+  if (desc.length > 120) desc = desc.slice(0, 120) + '\u2026';
+  infoCardDesc.textContent = desc;
+  infoCardDesc.style.display = desc ? 'block' : 'none';
+
   infoCardList.innerHTML = '';
-  if (cluster) {
-    const top5 = cluster.neighbors.slice(0, 5);
-    top5.forEach(n => {
-      const li = document.createElement('li');
-      li.innerHTML = `<span class="label">${n.word}</span><span class="score">${n.sim.toFixed(3)}</span>`;
-      infoCardList.appendChild(li);
-    });
-  }
+  const top5 = (item.nn || []).slice(0, 5);
+  top5.forEach(n => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="label">${n.name}</span><span class="score">${n.score.toFixed(3)}</span>`;
+    infoCardList.appendChild(li);
+  });
+
+  infoCardSource.textContent = item.source ? `Source: ${item.source}` : '';
+  infoCardSource.style.display = item.source ? 'block' : 'none';
 
   infoCard.classList.remove('visible');
   void infoCard.offsetWidth;
+  clampCardPosition(px, py);
   infoCard.classList.add('visible');
   infoCardVisible = true;
   infoCardTarget = worldPos;
@@ -919,23 +873,52 @@ function hideInfoCard() {
   resumeAutoRotate();
 }
 
+// ===== URL Hash =====
+function parseHashParams(hash) {
+  const raw = hash.startsWith('#') ? hash.slice(1) : hash;
+  if (!raw) return { formula: null, corpusId: 'default', debug: false };
+
+  // Check if it's a query-string format (has '=' or '&')
+  if (raw.includes('=') || raw.includes('&')) {
+    const params = new URLSearchParams(raw);
+    return {
+      formula: params.get('f') ? decodeURIComponent(params.get('f')) : null,
+      corpusId: params.get('s') || 'default',
+      debug: params.has('debug'),
+    };
+  }
+
+  // Bare hash → formula for backward compat
+  return {
+    formula: decodeURIComponent(raw.replace(/\+/g, ' ')),
+    corpusId: 'default',
+    debug: false,
+  };
+}
+
+function serializeHash(formula, corpusId) {
+  if (!formula) return '';
+  const params = new URLSearchParams();
+  params.set('f', encodeURIComponent(formula));
+  if (corpusId && corpusId !== 'default') params.set('s', corpusId);
+  return '#' + params.toString();
+}
+
 function updateURLHash(formula) {
-  const encoded = formula ? formula.replace(/\s+/g, '+') : '';
-  const hash = encoded ? `#${encoded}` : '';
+  const hash = serializeHash(formula, 'default');
   const url = window.location.pathname + hash;
   history.pushState(null, '', url);
 }
 
 function loadFromHash() {
-  const hash = window.location.hash.slice(1);
-  if (hash) {
-    const decoded = decodeURIComponent(hash).replace(/\+/g, ' ');
-    formulaInput.value = decoded;
+  const { formula } = parseHashParams(window.location.hash);
+  if (formula) {
+    formulaInput.value = formula;
     ghostText.classList.remove('visible');
-    setTimeout(() => handleFormula(decoded), 300);
   }
 }
 
+// ===== Observatory =====
 function showObservatory() {
   if (!lastFormula) {
     observatoryPanel.innerHTML = `
@@ -946,38 +929,41 @@ function showObservatory() {
       </div>
     `;
   } else {
+    const tokenStr = lastFormulaTokens.join(' ');
+    const ops = lastFormulaOps;
+    const resultName = lastFormulaResultName || '?';
+    const neighbors = lastFormulaResultNeighbors || [];
+    const resultVec = lastFormulaResultVec;
+
     const steps = [];
     steps.push({
-      num: 1,
-      label: 'tokenize',
-      detail: lastFormulaTokens.join(' '),
-      highlight: true,
+      num: 1, label: 'tokenize', detail: tokenStr, highlight: true
     });
     steps.push({
-      num: 2,
-      label: 'embed (384-dim)',
-      detail: lastFormulaTokens.map(t => `${t} → vector`).join('\n'),
-      highlight: true,
+      num: 2, label: 'embed (384-dim)', detail: lastFormulaTokens.map(t => `${t} → vector`).join('\n'), highlight: true
     });
+    const interleavedExpr = [];
+    for (let i = 0; i < lastFormulaTokens.length; i++) {
+      interleavedExpr.push(lastFormulaTokens[i]);
+      if (i < ops.length) interleavedExpr.push(ops[i]);
+    }
     steps.push({
-      num: 3,
-      label: 'arithmetic',
-      detail: lastFormula || '',
-      highlight: lastFormulaOps.length > 0,
+      num: 3, label: 'arithmetic',
+      detail: interleavedExpr.join(' ') + (resultName !== '?' ? ' → ' + resultName : ''),
+      highlight: ops.length > 0
     });
+    if (resultVec) {
+      const proj = projectVec(resultVec);
+      steps.push({
+        num: 4, label: 'PCA-3 projection',
+        detail: `${resultName} → [x: ${proj[0].toFixed(2)}  y: ${proj[1].toFixed(2)}  z: ${proj[2].toFixed(2)}]`,
+        highlight: true
+      });
+    }
     steps.push({
-      num: 4,
-      label: 'PCA-3 projection',
-      detail: 'project 384d → 3D point cloud position',
-      highlight: true,
-    });
-    steps.push({
-      num: 5,
-      label: 'result',
-      detail: lastFormulaResultWord
-        ? `${lastFormulaResultWord} + top-10 neighbors`
-        : 'nearest neighbor search',
-      highlight: !!lastFormulaResultWord,
+      num: 5, label: 'result',
+      detail: resultName !== '?' ? `${resultName} + top-${neighbors.length} neighbors` : 'nearest neighbor search',
+      highlight: !!lastFormulaResultName
     });
 
     observatoryPanel.innerHTML = `
@@ -994,10 +980,12 @@ function showObservatory() {
         `).join('')}
       </div>
       <div class="observatory-footer">
-        model: sentence-transformers/all-MiniLM-L6-v2<br>
-        corpus: ~3,000 AI/ML concepts<br>
+        model: ${corpusModel ? corpusModel.id : 'sentence-transformers/all-MiniLM-L6-v2'}<br>
+        corpus: ${corpusModel ? corpusModel.corpus_size.toLocaleString() : '?'} items<br>
         projection: PCA (3 components)<br>
-        variance explained: ~14%
+        variance explained: ${corpusModel ? (corpusModel.variance_explained[0] * 100).toFixed(1) : '?'}%<br>
+        ${corpusModel ? 'version: ' + corpusModel.corpus_version + '<br>' : ''}
+        tools/generate_corpus.py
       </div>
     `;
   }
@@ -1029,6 +1017,7 @@ function setPipelineAnnotation(text) {
   pipelineAnnotation.classList.add('visible');
 }
 
+// ===== Event Handlers =====
 formulaInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     const value = formulaInput.value.trim();
@@ -1036,9 +1025,29 @@ formulaInput.addEventListener('keydown', (e) => {
       clearAllTrails();
       return;
     }
-    if (value) {
-      clearAllTrails();
-      handleFormula(value);
+    if (!value) return;
+    handleFormula(value);
+    ghostText.classList.remove('visible');
+    statusLine.classList.remove('visible');
+    statusLine.classList.remove('error');
+  }
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const value = formulaInput.value.trim();
+    if (!value || !corpusLoaded) return;
+    const parts = value.split(/\s+/);
+    let changed = false;
+    for (let i = 0; i < parts.length; i++) {
+      const token = parts[i].toLowerCase();
+      if (i % 2 !== 0) continue;
+      const result = lookupToken(token);
+      if (result && result.suggestion) {
+        parts[i] = result.suggestion;
+        changed = true;
+      }
+    }
+    if (changed) {
+      formulaInput.value = parts.join(' ');
       ghostText.classList.remove('visible');
       statusLine.classList.remove('visible');
     }
@@ -1046,15 +1055,38 @@ formulaInput.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     hideInfoCard();
     hideObservatory();
+    statusLine.classList.remove('visible');
+    statusLine.classList.remove('error');
     formulaInput.blur();
   }
 });
 
 formulaInput.addEventListener('input', () => {
-  if (formulaInput.value.length > 0) {
+  const value = formulaInput.value.trim();
+  if (value.length > 0) {
     ghostText.classList.remove('visible');
+    if (!corpusLoaded) return;
+    const parts = value.split(/\s+/);
+    let suggestions = [];
+    for (let i = 0; i < parts.length; i++) {
+      if (i % 2 !== 0) continue;
+      const token = parts[i].toLowerCase();
+      if (token.length < 2) continue;
+      const result = lookupToken(token);
+      if (result && !result.exact && result.suggestion) {
+        suggestions.push(`"${token}" → ${result.suggestion}`);
+      }
+    }
+    if (suggestions.length > 0) {
+      statusLine.textContent = 'did you mean: ' + suggestions.join(', ') + ' (tab to accept)';
+      statusLine.classList.add('visible');
+      statusLine.classList.remove('error');
+    } else {
+      statusLine.classList.remove('visible');
+    }
   } else {
     ghostText.classList.add('visible');
+    statusLine.classList.remove('visible');
   }
 });
 
@@ -1063,16 +1095,12 @@ renderer.domElement.addEventListener('click', (e) => {
     hideInfoCard();
     return;
   }
-
+  if (!corpusLoaded) return;
   const result = getWorldPointAtScreen(e.clientX, e.clientY);
   if (!result) { hideInfoCard(); return; }
-  let word = null;
-  for (const hit of result) {
-    const w = RAY_POINTS[hit.idx];
-    if (w) { word = w; break; }
-  }
-  if (!word) { hideInfoCard(); return; }
-  showInfoCard(result[0].point, word);
+  const hit = result[0];
+  if (hit.idx < 0 || hit.idx >= corpusItems.length) { hideInfoCard(); return; }
+  showInfoCard(hit.point, corpusItems[hit.idx], hit.idx, e.clientX, e.clientY);
 });
 
 helpBtn.addEventListener('click', (e) => {
@@ -1090,6 +1118,21 @@ clearBtn.addEventListener('click', (e) => {
 observatoryOverlay.addEventListener('click', (e) => {
   if (e.target === observatoryOverlay) {
     hideObservatory();
+    formulaInput.focus();
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (observatoryOverlay.classList.contains('visible')) {
+      hideObservatory();
+      formulaInput.focus();
+    }
+    if (infoCardVisible) {
+      hideInfoCard();
+    }
+    statusLine.classList.remove('visible');
+    statusLine.classList.remove('error');
   }
 });
 
@@ -1105,25 +1148,25 @@ renderer.domElement.addEventListener('pointerdown', () => {
 });
 
 window.addEventListener('popstate', () => {
-  const hash = window.location.hash.slice(1);
-  if (hash) {
-    const decoded = decodeURIComponent(hash).replace(/\+/g, ' ');
-    formulaInput.value = decoded;
+  const { formula } = parseHashParams(window.location.hash);
+  if (formula) {
+    formulaInput.value = formula;
     ghostText.classList.remove('visible');
     clearAllTrails();
-    handleFormula(decoded);
+    handleFormula(formula);
   }
 });
 
-loadingEl.style.display = 'none';
-
+// ===== Animation Loop =====
 function animate() {
   requestAnimationFrame(animate);
 
   controls.target.lerp(cameraTarget, cameraLerpSpeed);
   controls.update();
 
-  geometry.attributes.color.needsUpdate = true;
+  if (geometry && geometry.attributes.color) {
+    geometry.attributes.color.needsUpdate = true;
+  }
 
   const now = Date.now();
   for (const trail of trails) {
@@ -1146,7 +1189,6 @@ function animate() {
     }
   }
 
-  const dt = now;
   for (let i = ripples.length - 1; i >= 0; i--) {
     const r = ripples[i];
     r.age += 16;
@@ -1171,10 +1213,9 @@ function animate() {
 
   if (infoCardVisible && infoCardTarget && infoCard.classList.contains('visible')) {
     const vec = infoCardTarget.clone().project(camera);
-    const x = (vec.x * 0.5 + 0.5) * window.innerWidth;
-    const y = (-vec.y * 0.5 + 0.5) * window.innerHeight;
-    infoCard.style.left = `${x}px`;
-    infoCard.style.top = `${y}px`;
+    const px = Math.max(0, Math.min(window.innerWidth, (vec.x * 0.5 + 0.5) * window.innerWidth));
+    const py = Math.max(0, Math.min(window.innerHeight, (-vec.y * 0.5 + 0.5) * window.innerHeight));
+    clampCardPosition(px, py);
   }
 
   if (clickRingSprite) {
@@ -1186,7 +1227,25 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-animate();
+// ===== Init =====
+let schemaParsed = false;
+async function init() {
+  loadFromHash();
+  const ok = await loadCorpusMeta();
+  if (!ok) return;
+  schemaParsed = true;
 
+  const { formula } = parseHashParams(window.location.hash);
+  if (formula) {
+    await ensureVectorsLoaded();
+    handleFormula(formula);
+  }
+
+  const { debug } = parseHashParams(window.location.hash);
+  if (debug) showObservatory();
+}
+
+animate();
 formulaInput.focus();
-loadFromHash();
+loadingEl.style.display = 'block';
+init();
