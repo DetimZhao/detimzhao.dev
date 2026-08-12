@@ -288,7 +288,7 @@ async function ensureVectorsLoaded() {
 }
 
 // ===== Point Cloud =====
-const MIN_POINTS = 3000;
+const MIN_POINTS = 5000;
 
 function randomInSphere(radius) {
   const u = Math.random();
@@ -315,7 +315,7 @@ function buildPointCloud() {
     posArr[i * 3] = p[0];
     posArr[i * 3 + 1] = p[1];
     posArr[i * 3 + 2] = p[2];
-    const b = 0.025 + Math.random() * 0.06;
+    const b = 0.04 + Math.random() * 0.10;
     colArr[i * 3] = b;
     colArr[i * 3 + 1] = b;
     colArr[i * 3 + 2] = b;
@@ -326,7 +326,7 @@ function buildPointCloud() {
     posArr[i * 3] = x;
     posArr[i * 3 + 1] = y;
     posArr[i * 3 + 2] = z;
-    const b = 0.008 + Math.random() * 0.025;
+    const b = 0.015 + Math.random() * 0.035;
     colArr[i * 3] = b;
     colArr[i * 3 + 1] = b;
     colArr[i * 3 + 2] = b;
@@ -341,7 +341,7 @@ function buildPointCloud() {
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
   const material = new THREE.PointsMaterial({
-    size: 0.15,
+    size: 0.22,
     map: pointTexture,
     vertexColors: true,
     blending: THREE.AdditiveBlending,
@@ -1131,8 +1131,8 @@ renderer.domElement.addEventListener('click', (e) => {
   if (!corpusLoaded) return;
   const result = getWorldPointAtScreen(e.clientX, e.clientY);
   if (!result) { hideInfoCard(); return; }
-  const hit = result[0];
-  if (hit.idx < 0 || hit.idx >= corpusItems.length) { hideInfoCard(); return; }
+  const hit = result.find(h => h.idx >= 0 && h.idx < corpusItems.length);
+  if (!hit) { hideInfoCard(); return; }
   showInfoCard(hit.point, corpusItems[hit.idx], hit.idx, e.clientX, e.clientY);
 });
 
