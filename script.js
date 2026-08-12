@@ -815,7 +815,15 @@ async function handleFormula(formula) {
     lastFormulaTokens = [itemName];
     lastFormulaOps = [];
     lastFormulaResultName = result.name;
-    lastFormulaResultVec = null;
+    if (vectorsLoaded && corpusVectors) {
+      const DIM = 384;
+      const vec = new Float32Array(DIM);
+      const start = result.idx * DIM;
+      for (let d = 0; d < DIM; d++) vec[d] = corpusVectors[start + d];
+      lastFormulaResultVec = vec;
+    } else {
+      lastFormulaResultVec = null;
+    }
     lastFormulaResultNeighbors = item.nn || [];
     inputContainer.classList.add('active');
     updateURLHash(formula);
@@ -1495,10 +1503,6 @@ function animate() {
 
   controls.target.lerp(cameraTarget, cameraLerpSpeed);
   controls.update();
-
-  if (corpusGeometry && corpusGeometry.attributes.color) {
-    corpusGeometry.attributes.color.needsUpdate = true;
-  }
 
   const now = Date.now();
   for (const trail of trails) {
