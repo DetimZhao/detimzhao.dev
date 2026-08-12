@@ -121,6 +121,7 @@ canvas { display: block; }
 }
 
 .ghost-text.visible { opacity: 0.5; }
+.ghost-text .dim { opacity: 0.35; }
 
 .pipeline {
   display: flex;

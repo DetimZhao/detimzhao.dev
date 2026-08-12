@@ -437,6 +437,51 @@ function lookupToken(token) {
   return { name: token, idx: -1, exact: false, suggestion: null };
 }
 
+let statusLineTimeout = null;
+
+function cancelStatusLineTimeout() {
+  if (statusLineTimeout) { clearTimeout(statusLineTimeout); statusLineTimeout = null; }
+}
+
+function findCommonPrefix(a, b) {
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  return i;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+function buildGhostHtml(parts) {
+  let html = '';
+  let hasSuggestion = false;
+  for (let i = 0; i < parts.length; i++) {
+    if (i > 0) html += ' ';
+    const token = parts[i];
+    if (i % 2 !== 0) {
+      html += escapeHtml(token);
+      continue;
+    }
+    const result = lookupToken(token.toLowerCase());
+    if (result && result.suggestion) {
+      hasSuggestion = true;
+      const cp = findCommonPrefix(token.toLowerCase(), result.suggestion);
+      if (cp > 0) {
+        html += escapeHtml(result.suggestion.slice(0, cp));
+        html += '<span class="dim">' + escapeHtml(result.suggestion.slice(cp)) + '</span>';
+      } else {
+        html += '<span class="dim">' + escapeHtml(result.suggestion) + '</span>';
+      }
+    } else {
+      html += escapeHtml(token);
+    }
+  }
+  return { html, hasSuggestion };
+}
+
 function computeResult(tokens, ops) {
   if (!vectorsLoaded || !corpusVectors) return null;
   const DIM = 384;
@@ -703,7 +748,11 @@ function clearAllTrails() {
   inputContainer.classList.remove('active');
   hidePipeline();
   formulaInput.value = '';
+  ghostText.innerHTML = 'type a word or formula\u2026';
   ghostText.classList.add('visible');
+  cancelStatusLineTimeout();
+  statusLine.classList.remove('visible');
+  statusLine.classList.remove('error');
 }
 
 function updateTrailCount() {
@@ -725,6 +774,14 @@ async function handleFormula(formula) {
     const result = lookupToken(tokens[0]);
     if (!result || result.idx < 0) {
       inputContainer.classList.remove('active');
+      cancelStatusLineTimeout();
+      statusLine.textContent = 'token not found: ' + tokens[0];
+      statusLine.classList.add('visible');
+      statusLine.classList.add('error');
+      statusLineTimeout = setTimeout(() => {
+        statusLine.classList.remove('visible');
+        statusLine.classList.remove('error');
+      }, 4000);
       return;
     }
     const trail = createTrailObject(formula);
@@ -776,6 +833,15 @@ async function handleFormula(formula) {
   const allResolved = resolved.every(r => r && r.idx >= 0);
   if (!allResolved) {
     inputContainer.classList.remove('active');
+    cancelStatusLineTimeout();
+    const notFoundTokens = tokens.filter((t, i) => !resolved[i] || resolved[i].idx < 0);
+    statusLine.textContent = 'token not found: ' + notFoundTokens.join(', ');
+    statusLine.classList.add('visible');
+    statusLine.classList.add('error');
+    statusLineTimeout = setTimeout(() => {
+      statusLine.classList.remove('visible');
+      statusLine.classList.remove('error');
+    }, 4000);
     return;
   }
 
@@ -1099,6 +1165,7 @@ formulaInput.addEventListener('keydown', (e) => {
     if (!value) return;
     handleFormula(value);
     ghostText.classList.remove('visible');
+    cancelStatusLineTimeout();
     statusLine.classList.remove('visible');
     statusLine.classList.remove('error');
   }
@@ -1120,14 +1187,17 @@ formulaInput.addEventListener('keydown', (e) => {
     if (changed) {
       formulaInput.value = parts.join(' ');
       ghostText.classList.remove('visible');
+      cancelStatusLineTimeout();
       statusLine.classList.remove('visible');
     }
   }
   if (e.key === 'Escape') {
     hideInfoCard();
     hideObservatory();
+    cancelStatusLineTimeout();
     statusLine.classList.remove('visible');
     statusLine.classList.remove('error');
+    ghostText.classList.remove('visible');
     formulaInput.blur();
   }
 });
@@ -1136,28 +1206,52 @@ formulaInput.addEventListener('input', () => {
   const value = formulaInput.value.trim();
   if (value.length > 0) {
     ghostText.classList.remove('visible');
+    cancelStatusLineTimeout();
     if (!corpusLoaded) return;
     const parts = value.split(/\s+/);
     let suggestions = [];
+    let notFound = [];
     for (let i = 0; i < parts.length; i++) {
       if (i % 2 !== 0) continue;
       const token = parts[i].toLowerCase();
       if (token.length < 2) continue;
       const result = lookupToken(token);
       if (result && !result.exact && result.suggestion) {
-        suggestions.push(`"${token}" → ${result.suggestion}`);
+        suggestions.push(`"${token}" \u2192 ${result.suggestion}`);
+      } else if (result && result.idx < 0) {
+        notFound.push(token);
       }
     }
     if (suggestions.length > 0) {
+      const { html, hasSuggestion } = buildGhostHtml(parts);
+      if (hasSuggestion) {
+        ghostText.innerHTML = html;
+        ghostText.classList.add('visible');
+      }
       statusLine.textContent = 'did you mean: ' + suggestions.join(', ') + ' (tab to accept)';
       statusLine.classList.add('visible');
       statusLine.classList.remove('error');
+      statusLineTimeout = setTimeout(() => {
+        statusLine.classList.remove('visible');
+        statusLine.classList.remove('error');
+      }, 4000);
+    } else if (notFound.length > 0) {
+      statusLine.textContent = 'token not found: ' + notFound.join(', ');
+      statusLine.classList.add('visible');
+      statusLine.classList.add('error');
+      statusLineTimeout = setTimeout(() => {
+        statusLine.classList.remove('visible');
+        statusLine.classList.remove('error');
+      }, 4000);
     } else {
       statusLine.classList.remove('visible');
+      statusLine.classList.remove('error');
     }
   } else {
+    ghostText.innerHTML = 'type a word or formula\u2026';
     ghostText.classList.add('visible');
     statusLine.classList.remove('visible');
+    cancelStatusLineTimeout();
   }
 });
 
@@ -1248,6 +1342,7 @@ document.addEventListener('keydown', (e) => {
     if (infoCardVisible) {
       hideInfoCard();
     }
+    cancelStatusLineTimeout();
     statusLine.classList.remove('visible');
     statusLine.classList.remove('error');
     formulaInput.blur();
