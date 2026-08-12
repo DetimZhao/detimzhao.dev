@@ -636,7 +636,8 @@ function addResultGlow(pos, trail) {
 }
 
 function dimAllTrails() {
-  for (let i = 0; i < trails.length; i++) {
+  const lastIdx = trails.length - 1;
+  for (let i = 0; i < lastIdx; i++) {
     const age = trails.length - 1 - i;
     const baseFade = 0.18 + age * 0.02;
     trails[i].opacity = Math.max(0.12, baseFade);
@@ -654,7 +655,7 @@ function dimAllTrails() {
     }
   }
   if (trails.length > 0) {
-    const latest = trails[trails.length - 1];
+    const latest = trails[lastIdx];
     latest.opacity = 1.0;
     for (const line of latest.lines) {
       if (line.material) line.material.opacity = 0.85;
@@ -1247,6 +1248,7 @@ document.addEventListener('keydown', (e) => {
     }
     statusLine.classList.remove('visible');
     statusLine.classList.remove('error');
+    formulaInput.blur();
   }
 });
 

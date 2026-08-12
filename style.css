@@ -292,6 +292,11 @@ canvas { display: block; }
   border-color: var(--accent-dim);
 }
 
+.bottom-btn:focus-visible {
+  outline: 2px solid var(--accent-dim);
+  outline-offset: 2px;
+}
+
 .loading {
   position: fixed;
   top: 50%;
@@ -432,6 +437,4 @@ canvas { display: block; }
   line-height: 1.8;
 }
 
-@keyframes blink {
-  50% { opacity: 0; }
-}
+
