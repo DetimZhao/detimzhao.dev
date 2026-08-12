@@ -29,6 +29,7 @@ log = logging.getLogger(__name__)
 EMBEDDING_DIM = 384
 NN_K = 10
 DROPPED_SOURCE = "arxiv"
+CURATED_VERSION = "1.1"
 
 
 def load_corpus(corpus_path):
@@ -88,6 +89,7 @@ def main():
     # Update model metadata
     model_meta["corpus_count"] = len(kept_items)
     model_meta["corpus_size"] = len(kept_items)
+    model_meta["corpus_version"] = CURATED_VERSION
 
     # Recompute integrity hash from the filtered vector bytes
     vec_bytes = kept_vectors.astype(np.float32).tobytes()
