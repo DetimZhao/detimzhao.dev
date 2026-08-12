@@ -334,91 +334,183 @@ canvas { display: block; }
 }
 
 .observatory-panel {
-  background: oklch(0.13 0.005 260 / 0.97);
+  background: oklch(0.11 0.005 260 / 0.97);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 28px 32px;
-  max-width: 640px;
-  width: 90%;
-  max-height: 80vh;
+  max-width: 680px;
+  width: 95%;
+  max-height: 85vh;
   overflow-y: auto;
 }
 
-.observatory-title {
-  color: var(--accent);
-  font-size: 15px;
+.observatory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
   font-weight: 500;
-  margin-bottom: 20px;
-  letter-spacing: 0.01em;
 }
 
-.observatory-pipeline {
+.observatory-close {
+  color: var(--muted);
+  cursor: default;
+}
+
+.observatory-close:hover { color: var(--accent); }
+
+.observatory-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.observatory-section:last-child { border-bottom: none; }
+
+.observatory-section-label {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.observatory-formula-bar {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.observatory-formula-bar .observatory-token { color: var(--muted); }
+.observatory-formula-bar .observatory-op { color: var(--accent); }
+.observatory-formula-bar .observatory-arrow { color: var(--accent); }
+.observatory-formula-bar .observatory-result { color: var(--fg); }
+
+.observatory-heatmap-grid {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
 }
 
-.obs-step {
+.observatory-heatmap-row {
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: oklch(0.10 0 0 / 0.5);
-  transition: border-color 0.3s ease, background 0.3s ease;
+  align-items: center;
+  gap: 8px;
 }
 
-.obs-step.highlight {
-  border-color: var(--accent-dim);
-  background: oklch(0.15 0.02 200 / 0.4);
+.observatory-heatmap-name {
+  width: 80px;
+  text-align: right;
+  color: var(--muted);
+  font-size: 11px;
+  flex-shrink: 0;
 }
 
-.obs-step-num {
+.observatory-cells {
+  display: flex;
+  gap: 1px;
+}
+
+.observatory-cell {
+  width: 12px;
+  height: 14px;
+  background: var(--accent-dim);
+}
+
+.observatory-bin-labels {
+  display: flex;
+  gap: 1px;
+  padding-left: 88px;
+  font-size: 9px;
+  color: var(--border);
+}
+
+.observatory-bin-labels span {
+  width: 12px;
+  text-align: center;
+}
+
+.observatory-arithmetic {
   color: var(--muted);
   font-size: 12px;
-  font-weight: 500;
-  flex-shrink: 0;
-  width: 24px;
 }
 
-.obs-step.highlight .obs-step-num { color: var(--accent); }
+.observatory-arithmetic .observatory-sym { color: var(--accent); }
 
-.obs-step-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.obs-step-label {
-  color: var(--muted);
-  font-size: 11px;
-  letter-spacing: 0.02em;
-  margin-bottom: 4px;
-}
-
-.obs-step.highlight .obs-step-label { color: var(--accent); }
-
-.obs-step-detail {
-  color: var(--fg);
-  font-size: 13px;
-  letter-spacing: 0.01em;
-  word-break: break-word;
-}
-
-.obs-step-detail.mono {
-  font-size: 11px;
+.observatory-arithmetic .observatory-cosine {
   color: var(--accent-dim);
-  overflow-wrap: anywhere;
+  font-size: 10px;
+  margin-left: 8px;
+}
+
+.observatory-pca-chip {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.observatory-pca-chip span { color: var(--accent); }
+
+.observatory-neighbors-table {
+  width: 100%;
+}
+
+.observatory-neighbor-row {
+  display: flex;
+  align-items: center;
+  padding: 3px 0;
+}
+
+.observatory-neighbor-row:nth-child(even) {
+  background: oklch(0.13 0.005 260);
+}
+
+.observatory-neighbor-rank {
+  width: 28px;
+  color: var(--border);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.observatory-neighbor-name {
+  width: 180px;
+  flex-shrink: 0;
+  padding-left: 8px;
+}
+
+.observatory-neighbor-bar-wrap {
+  flex: 1;
+  padding-left: 8px;
+}
+
+.observatory-neighbor-bar {
+  height: 10px;
+  background: var(--accent-dim);
+}
+
+.observatory-neighbor-score {
+  width: 50px;
+  text-align: right;
+  color: var(--accent-dim);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .observatory-footer {
-  margin-top: 20px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
-  color: var(--muted);
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
   font-size: 10px;
-  letter-spacing: 0.02em;
-  line-height: 1.8;
+  color: var(--muted);
+  letter-spacing: 0.01em;
 }
 
+.observatory-footer-sep { color: var(--border); }
+.observatory-footer-link { color: var(--accent); }
 
+@keyframes blink {
+  50% { opacity: 0; }
+}

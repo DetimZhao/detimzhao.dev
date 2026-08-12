@@ -16,6 +16,7 @@ let corpusModel = null;
 let nameToIdx = null;
 let corpusLoaded = false;
 let vectorsLoaded = false;
+let vectorsHashMismatch = false;
 let lastFormula = null;
 let lastFormulaTokens = [];
 let lastFormulaOps = [];
@@ -296,6 +297,7 @@ async function loadCorpusVectors() {
       const hashBuf = await crypto.subtle.digest('SHA-256', buf);
       const hashHex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
       if (hashHex !== corpusModel.vec_sha256) {
+        vectorsHashMismatch = true;
         console.error('corpus.vec.f32 integrity check failed');
       }
     }
@@ -1056,75 +1058,192 @@ function loadFromHash() {
 }
 
 // ===== Observatory =====
+const DIM = 384;
+const HEATMAP_BINS = 32;
+const BIN_SIZE = DIM / HEATMAP_BINS;
+
+function computeHeatmapBins(vec) {
+  const bins = new Float32Array(HEATMAP_BINS);
+  for (let i = 0; i < HEATMAP_BINS; i++) {
+    let sum = 0;
+    for (let d = i * BIN_SIZE; d < (i + 1) * BIN_SIZE; d++) {
+      sum += vec[d];
+    }
+    bins[i] = sum;
+  }
+  let maxAbs = 0;
+  for (let i = 0; i < HEATMAP_BINS; i++) maxAbs = Math.max(maxAbs, Math.abs(bins[i]));
+  if (maxAbs > 0) {
+    for (let i = 0; i < HEATMAP_BINS; i++) bins[i] = Math.abs(bins[i]) / maxAbs;
+  }
+  return bins;
+}
+
+function renderHeatmapRow(name, bins) {
+  const cells = [];
+  for (let i = 0; i < HEATMAP_BINS; i++) {
+    cells.push(`<div class="observatory-cell" style="opacity:${bins[i].toFixed(3)}"></div>`);
+  }
+  return `<div class="observatory-heatmap-row"><span class="observatory-heatmap-name">${name}</span><div class="observatory-cells">${cells.join('')}</div></div>`;
+}
+
+function getVecForToken(tokenName) {
+  if (!vectorsLoaded || !corpusVectors) return null;
+  const idx = nameToIdx.get(tokenName);
+  if (idx === undefined || idx >= corpusCount) return null;
+  return corpusVectors.subarray(idx * DIM, (idx + 1) * DIM);
+}
+
+function buildBinLabels() {
+  const labels = [];
+  for (let i = 0; i < HEATMAP_BINS; i++) {
+    if (i === 0) labels.push('<span>0</span>');
+    else if (i === 8) labels.push('<span>96</span>');
+    else if (i === 16) labels.push('<span>192</span>');
+    else if (i === 24) labels.push('<span>288</span>');
+    else if (i === 31) labels.push('<span>384</span>');
+    else labels.push('<span></span>');
+  }
+  return labels.join('');
+}
+
 function showObservatory() {
   if (!lastFormula) {
-    observatoryPanel.innerHTML = `
-      <div class="observatory-title">observatory</div>
-      <div style="color: var(--muted); font-size: 13px; padding: 20px 0;">
-        enter a formula to see the pipeline<br><br>
-        try <span style="color:var(--accent)">king - man + woman</span>
-      </div>
-    `;
+    observatoryPanel.innerHTML = `<div class="observatory-header">
+      <span>OBSERVATORY</span>
+      <span class="observatory-close" onclick="document.getElementById('observatory-overlay').classList.remove('visible')">&times;</span>
+    </div>
+    <div class="observatory-section" style="text-align:center; color:var(--muted); font-size:13px; padding:30px 16px;">
+      enter a formula to see the pipeline<br><br>
+      try <span style="color:var(--accent)">attention - diffusion + RAG</span>
+    </div>`;
   } else {
-    const tokenStr = lastFormulaTokens.join(' ');
     const ops = lastFormulaOps;
     const resultName = lastFormulaResultName || '?';
     const neighbors = lastFormulaResultNeighbors || [];
     const resultVec = lastFormulaResultVec;
 
-    const steps = [];
-    steps.push({
-      num: 1, label: 'tokenize', detail: tokenStr, highlight: true
-    });
-    steps.push({
-      num: 2, label: 'embed (384-dim)', detail: lastFormulaTokens.map(t => `${t} → vector`).join('\n'), highlight: true
-    });
-    const interleavedExpr = [];
-    for (let i = 0; i < lastFormulaTokens.length; i++) {
-      interleavedExpr.push(lastFormulaTokens[i]);
-      if (i < ops.length) interleavedExpr.push(ops[i]);
-    }
-    steps.push({
-      num: 3, label: 'arithmetic',
-      detail: interleavedExpr.join(' ') + (resultName !== '?' ? ' → ' + resultName : ''),
-      highlight: ops.length > 0
-    });
-    if (resultVec) {
-      const proj = projectVec(resultVec);
-      steps.push({
-        num: 4, label: 'PCA-3 projection',
-        detail: `${resultName} → [x: ${proj[0].toFixed(2)}  y: ${proj[1].toFixed(2)}  z: ${proj[2].toFixed(2)}]`,
-        highlight: true
-      });
-    }
-    steps.push({
-      num: 5, label: 'result',
-      detail: resultName !== '?' ? `${resultName} + top-${neighbors.length} neighbors` : 'nearest neighbor search',
-      highlight: !!lastFormulaResultName
-    });
+    let sections = '';
 
-    observatoryPanel.innerHTML = `
-      <div class="observatory-title">observatory</div>
-      <div class="observatory-pipeline">
-        ${steps.map(s => `
-          <div class="obs-step${s.highlight ? ' highlight' : ''}">
-            <span class="obs-step-num">${s.num}.</span>
-            <div class="obs-step-content">
-              <div class="obs-step-label">${s.label}</div>
-              <div class="obs-step-detail${s.num === 2 ? ' mono' : ''}">${s.detail}</div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-      <div class="observatory-footer">
-        model: ${corpusModel ? corpusModel.id : 'sentence-transformers/all-MiniLM-L6-v2'}<br>
-        corpus: ${corpusModel ? corpusModel.corpus_size.toLocaleString() : '?'} items<br>
-        projection: PCA (3 components)<br>
-        variance explained: ${corpusModel ? (corpusModel.variance_explained[0] * 100).toFixed(1) : '?'}%<br>
-        ${corpusModel ? 'version: ' + corpusModel.corpus_version + '<br>' : ''}
-        tools/generate_corpus.py
-      </div>
-    `;
+    // 1. Formula bar
+    let formulaBarHtml = '';
+    for (let i = 0; i < lastFormulaTokens.length; i++) {
+      formulaBarHtml += `<span class="observatory-token">${lastFormulaTokens[i]}</span>`;
+      if (i < ops.length) {
+        formulaBarHtml += ` <span class="observatory-op">${ops[i] === '-' ? '\u2212' : '+'}</span> `;
+      }
+    }
+    if (resultName && resultName !== '?') {
+      formulaBarHtml += ` <span class="observatory-arrow">\u2192</span> <span class="observatory-result">${resultName}</span>`;
+    }
+    sections += `<div class="observatory-section">
+      <div class="observatory-formula-bar">${formulaBarHtml}</div>
+    </div>`;
+
+    // 2. Heatmaps (if vectors loaded)
+    if (vectorsLoaded && corpusVectors) {
+      let heatmapHtml = '';
+      for (const token of lastFormulaTokens) {
+        const vec = getVecForToken(token);
+        if (vec) {
+          heatmapHtml += renderHeatmapRow(token, computeHeatmapBins(vec));
+        }
+      }
+      if (resultVec && lastFormulaTokens.length > 1) {
+        heatmapHtml += renderHeatmapRow('result', computeHeatmapBins(resultVec));
+      }
+      if (heatmapHtml) {
+        sections += `<div class="observatory-section">
+          <div class="observatory-section-label">384-DIM VECTOR HEATMAPS (32 BINS)</div>
+          <div class="observatory-heatmap-grid">${heatmapHtml}</div>
+          <div class="observatory-bin-labels">${buildBinLabels()}</div>
+        </div>`;
+      }
+    }
+
+    // 3. Arithmetic
+    let arithHtml = '';
+    for (let i = 0; i < lastFormulaTokens.length; i++) {
+      arithHtml += `<span class="observatory-sym">V</span>(${lastFormulaTokens[i]})`;
+      if (i < ops.length) {
+        arithHtml += ` <span class="observatory-sym">${ops[i] === '-' ? '\u2212' : '+'}</span> `;
+      }
+    }
+    if (resultName && resultName !== '?') {
+      arithHtml += ` <span class="observatory-sym">\u2248</span> <span class="observatory-sym">V</span>(${resultName})`;
+    }
+    if (neighbors.length > 0) {
+      arithHtml += ` <span class="observatory-cosine">cos = ${neighbors[0].score.toFixed(3)}</span>`;
+    }
+    sections += `<div class="observatory-section">
+      <div class="observatory-section-label">ARITHMETIC</div>
+      <div class="observatory-arithmetic">${arithHtml}</div>
+    </div>`;
+
+    // 4. PCA-3 chip
+    let pcaCoords = null;
+    if (resultVec) {
+      pcaCoords = projectVec(resultVec);
+    } else if (lastFormulaTokens.length > 0) {
+      const idx = nameToIdx.get(lastFormulaTokens[0]);
+      if (idx !== undefined && idx < corpusCount) {
+        const pos = corpusItems[idx].pos;
+        pcaCoords = pos;
+      }
+    }
+    if (pcaCoords) {
+      const displayName = resultName || lastFormulaTokens[0];
+      sections += `<div class="observatory-section">
+        <div class="observatory-section-label">PCA-3 PROJECTION</div>
+        <div class="observatory-pca-chip">
+          <span>${displayName}</span> \u2192 [x: <span>${pcaCoords[0] >= 0 ? '+' : ''}${pcaCoords[0].toFixed(2)}</span>  y: <span>${pcaCoords[1] >= 0 ? '+' : ''}${pcaCoords[1].toFixed(2)}</span>  z: <span>${pcaCoords[2] >= 0 ? '+' : ''}${pcaCoords[2].toFixed(2)}</span>]
+        </div>
+      </div>`;
+    }
+
+    // 5. Top-10 neighbors
+    if (neighbors.length > 0) {
+      const maxScore = neighbors[0].score;
+      let neighborsHtml = '';
+      for (let k = 0; k < Math.min(neighbors.length, 10); k++) {
+        const n = neighbors[k];
+        const pct = maxScore > 0 ? Math.round((n.score / maxScore) * 100) : 0;
+        neighborsHtml += `<div class="observatory-neighbor-row">
+          <span class="observatory-neighbor-rank">${k + 1}</span>
+          <span class="observatory-neighbor-name">${n.name}</span>
+          <div class="observatory-neighbor-bar-wrap"><div class="observatory-neighbor-bar" style="width:${pct}%"></div></div>
+          <span class="observatory-neighbor-score">${n.score.toFixed(3)}</span>
+        </div>`;
+      }
+      sections += `<div class="observatory-section">
+        <div class="observatory-section-label">TOP-10 NEIGHBORS (COSINE SIMILARITY)</div>
+        <div class="observatory-neighbors-table">${neighborsHtml}</div>
+      </div>`;
+    }
+
+    // 6. Footer
+    const modelId = corpusModel ? corpusModel.id : 'sentence-transformers/all-MiniLM-L6-v2';
+    const corpusSize = corpusModel ? corpusModel.corpus_size.toLocaleString() : '?';
+    const variance = corpusModel && corpusModel.variance_explained ? (corpusModel.variance_explained[0] * 100).toFixed(1) : '?';
+    const version = corpusModel ? corpusModel.corpus_version : '?';
+    let footerHtml = `<span>model: <span style="color:var(--fg)">${modelId}</span></span>
+      <span class="observatory-footer-sep">\u00b7</span>
+      <span>corpus: <span style="color:var(--fg)">${corpusSize}</span> items</span>
+      <span class="observatory-footer-sep">\u00b7</span>
+      <span>PCA-3 variance explained: <span style="color:var(--fg)">${variance}%</span></span>
+      <span class="observatory-footer-sep">\u00b7</span>
+      <span>version: <span style="color:var(--fg)">${version}</span></span>
+      <span class="observatory-footer-sep">\u00b7</span>
+      <span class="observatory-footer-link">tools/generate_corpus.py</span>`;
+    if (vectorsHashMismatch) {
+      footerHtml += `<br><span style="color: oklch(0.50 0.10 20);">vector integrity mismatch \u2014 reload the page</span>`;
+    }
+    sections += `<div class="observatory-section"><div class="observatory-footer">${footerHtml}</div></div>`;
+
+    observatoryPanel.innerHTML = `<div class="observatory-header">
+      <span>OBSERVATORY</span>
+      <span class="observatory-close" onclick="document.getElementById('observatory-overlay').classList.remove('visible')">&times;</span>
+    </div>${sections}`;
   }
   observatoryOverlay.classList.add('visible');
 }
