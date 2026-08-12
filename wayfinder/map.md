@@ -29,10 +29,15 @@ Ship the Semantic Arithmetic Playground to `detimzhao.dev` with the real math co
 - [T10 — Prototype "did you mean" UX](tickets/T10-prototype-did-you-mean-ux.md) — Hybrid A+B: ghost text (inline correction at cursor) + status line (4s discoverability flash). Tab accepts, Enter runs, Esc cancels. Prototype in `wayfinder/prototypes/T10-did-you-mean.html`.
 - [T11 — Prototype observatory layout](tickets/T11-prototype-observatory-layout.md) — Binned heatmap (32 bins), vertical pipeline flow. 6 sections: formula bar, vector heatmaps, arithmetic, PCA-3 chip, top-10 neighbors, footer. Prototype in `wayfinder/prototypes/T11-observatory.html`.
 - [T12 — Prototype info-card layout](tickets/T12-prototype-info-card-layout.md) — 260px card: name (accent) → description (120 chars) → top-5 neighbors (tabular scores) → source (muted). Left-edge cyan accent bar. 3 example cards. Prototype in `wayfinder/prototypes/T12-info-card.html`.
+- [T13 — Curate corpus: drop arXiv paper-title entries](tickets/T13-curate-corpus-drop-arxiv.md) — 500 arXiv title entries (27% of corpus) dropped as gibberish; 1,294 kept as-is. PCA preserved (no refit), nn recomputed among kept set, `corpus_version` → `1.1`. Executed by `tools/curate_corpus.py`.
+
+## Next step
+
+- [T14 — First deploy](tickets/T14-first-deploy-push-main-verify-staging.md) — open task. T04's provisioning *commands* are locked but were never executed (`detimzhao/detimzhao.dev` 404s, remote still local). Captain provisions the repo + Pages, then push `main` and verify the staging URL.
 
 ## Not yet specified
 
-- **Shell absorption**: will the existing Three.js shell structurally accept async `loadCorpus()` + the new render path, or need refactor first? Only visible once Sprint 1 integration is attempted. Graduates when parser/arithmetic ticket resolves.
+_None — the shell absorbed the async `loadCorpus()` + render path (QA 21/21), so the former "Shell absorption" fog is resolved._
 
 ## Out of scope
 
