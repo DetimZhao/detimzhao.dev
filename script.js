@@ -675,13 +675,15 @@ async function handleFormula(formula) {
     addSourceGlow(result.idx, trail);
 
     const item = corpusItems[result.idx];
-    const topN = Math.min((item.nn || []).length, 5);
+    const topN = Math.min((item.nn || []).length, 10);
+    const sourcePos = trail.resultPos.clone();
     for (let k = 0; k < topN; k++) {
       const nnIdx = nameToIdx.get(item.nn[k].name);
       if (nnIdx !== undefined) {
         trail.neighborLabelIndices.push(nnIdx);
         const nnPos = new THREE.Vector3(corpusItems[nnIdx].pos[0], corpusItems[nnIdx].pos[1], corpusItems[nnIdx].pos[2]);
-        addLabelAt(nnPos, item.nn[k].name, 0.8, trail);
+        addConnectorBetween(sourcePos, nnPos, trail, false);
+        addLabelAt(nnPos.clone(), item.nn[k].name, 0.8, trail);
       }
     }
     addResultGlow(trail.resultPos, trail);
@@ -760,11 +762,12 @@ async function handleFormula(formula) {
     trail.resultLabel = addLabelAt(resultPos.clone().add(new THREE.Vector3(0, 0.5, 0)), topName, 0.95, trail);
   }
 
-  const topK = Math.min(neighbors.length, 5);
+  const topK = Math.min(neighbors.length, 10);
   for (let k = 0; k < topK; k++) {
     trail.neighborLabelIndices.push(neighbors[k].idx);
     const nnPos = new THREE.Vector3(corpusItems[neighbors[k].idx].pos[0], corpusItems[neighbors[k].idx].pos[1], corpusItems[neighbors[k].idx].pos[2]);
-    addLabelAt(nnPos, neighbors[k].name, 0.8, trail);
+    addConnectorBetween(resultPos, nnPos, trail, false);
+    addLabelAt(nnPos.clone(), neighbors[k].name, 0.8, trail);
   }
 
   trails.push(trail);
