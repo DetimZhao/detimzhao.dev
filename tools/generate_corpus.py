@@ -56,8 +56,9 @@ PERMISSIVE_LICENSES = {
 }
 
 SESSION = requests.Session()
-SESSION.headers.setdefault("User-Agent",
-    "semantic-arithmetic-corpus/1.0 (corpus generation tool)")
+SESSION.headers["User-Agent"] = (
+    "semantic-arithmetic-corpus/1.0 (https://github.com/detimzhao-dev; corpus generation tool)"
+)
 # Optional HF token for rate-limit bump
 import os
 HF_TOKEN = os.environ.get("HF_TOKEN")
