@@ -932,8 +932,9 @@ async function handleFormula(formula) {
 // ===== Click Handling =====
 function getWorldPointAtScreen(x, y) {
   if (!corpusPoints) return null;
-  mouse.x = (x / window.innerWidth) * 2 - 1;
-  mouse.y = -(y / window.innerHeight) * 2 + 1;
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((x - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((y - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   const intersects = raycaster.intersectObject(corpusPoints);
   if (intersects.length > 0) {
@@ -1412,8 +1413,9 @@ renderer.domElement.addEventListener('pointermove', (e) => {
     renderer.domElement.style.cursor = '';
     return;
   }
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   const intersects = raycaster.intersectObject(corpusPoints);
   if (intersects.length === 0) {
