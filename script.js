@@ -972,7 +972,7 @@ function showInfoCard(worldPos, item, idx, screenX, screenY) {
   let desc = item.description || '';
   if (desc.length > 120) desc = desc.slice(0, 120) + '\u2026';
   infoCardDesc.textContent = desc;
-  infoCardDesc.style.display = desc ? 'block' : 'none';
+  infoCardDesc.style.display = desc ? '-webkit-box' : 'none';
 
   infoCardList.innerHTML = '';
   const top5 = (item.nn || []).slice(0, 5);
