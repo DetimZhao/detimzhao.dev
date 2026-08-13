@@ -31,10 +31,12 @@ Ship the Semantic Arithmetic Playground to `detimzhao.dev` with the real math co
 - [T12 — Prototype info-card layout](tickets/T12-prototype-info-card-layout.md) — 260px card: name (accent) → description (120 chars) → top-5 neighbors (tabular scores) → source (muted). Left-edge cyan accent bar. 3 example cards. Prototype in `wayfinder/prototypes/T12-info-card.html`.
 - [T13 — Curate corpus: drop arXiv paper-title entries](tickets/T13-curate-corpus-drop-arxiv.md) — 500 arXiv title entries (27% of corpus) dropped as gibberish; 1,294 kept as-is. PCA preserved (no refit), nn recomputed among kept set, `corpus_version` → `1.1`. Executed by `tools/curate_corpus.py`.
 - [T14 — First deploy](tickets/T14-first-deploy-push-main-verify-staging.md) — Repo `DetimZhao/detimzhao.dev` public, `main` pushed @ `f539a11`. Pages deploys via GitHub Actions `.github/workflows/static.yml` (commit `6a9b1a2`) — overrides T04's classic "Deploy from a branch" plan. Staging URL `https://detimzhao.github.io/detimzhao.dev/` verified 22/22 (cloud renders, formula resolves, observatory opens, integrity hash matches, relative paths clean).
+- [T15 — Promote staging to custom domain detimzhao.dev](tickets/T15-custom-domain-detimzhao-dev.md) — Live at `https://detimzhao.dev/`. Pages custom domain set (Actions-based, config not CNAME file). Cloudflare DNS: apex A → GitHub Pages IPs + `www` CNAME → `detimzhao.github.io`, all DNS-only (grey cloud; orange proxying was the blocker). GitHub verified + issued the cert, `https_enforced: true`. HTTP→HTTPS 301, apex serves 200 from GitHub, www→apex 301.
+- [T16 — Lock down email anti-spoofing](tickets/T16-email-anti-spoof.md) — Both `.dev` and `.com` set to "no mail, no sending": SPF `v=spf1 -all` + DMARC `v=DMARC1; p=reject;`, no MX/DKIM/`rua`. Verified via dig; forgeries rejected.
 
 ## Next step
 
-- [T15 — Promote staging to custom domain detimzhao.dev](tickets/T15-custom-domain-detimzhao-dev.md) — open task. Pages custom domain `detimzhao.dev` already set (Actions-based; stored in Pages config, no CNAME file — `configure-pages@v5` emits it). Blocker: captain must repoint Cloudflare DNS off the `.com` redirect — apex A records → GitHub Pages IPs (DNS-only/grey cloud) plus optional `www` CNAME — then GitHub verifies, issues the cert, and we enforce HTTPS and verify `https://detimzhao.dev/`.
+_None — Phase 1 is shipped to the apex `https://detimzhao.dev/` with HTTPS enforced and email anti-spoofing locked down on both domains. Remaining roadmap (Phase 2 self-corpus, v1.5 movies corpus) is deferred and tracked in `PLAN.md`, not as open wayfinder tickets._
 
 ## Not yet specified
 
