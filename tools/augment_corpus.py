@@ -305,9 +305,12 @@ def main():
     projections = pca.fit_transform(all_vectors)
     log.info("PCA variance explained: %.2f%%", sum(pca.explained_variance_ratio_) * 100)
 
-    # Min-max normalize to ~±10
-    projections -= projections.min(axis=0)
-    projections /= projections.max(axis=0)
+    # Min-max normalize to ~±10 (capture bounds first so the frontend can
+    # project new result vectors into the same space)
+    pos_min = projections.min(axis=0).tolist()
+    pos_max = projections.max(axis=0).tolist()
+    projections -= pos_min
+    projections /= (np.asarray(pos_max) - np.asarray(pos_min))
     projections = (projections - 0.5) * 20
 
     # Update positions
@@ -336,6 +339,8 @@ def main():
             "mean": pca.mean_.tolist(),
             "components": pca.components_.tolist(),
             "explained_variance_ratio": pca.explained_variance_ratio_.tolist(),
+            "pos_min": pos_min,
+            "pos_max": pos_max,
         },
         "model": model_meta,
     }

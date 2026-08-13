@@ -168,6 +168,7 @@ let autoRotatePaused = false;
 let autoRotateTimer = 0;
 let clickRingSprite = null;
 let hoverRingSprite = null;
+let hoverLabelSprite = null;
 let hoveredIdx = -1;
 let savedHoverColor = null;
 
@@ -218,6 +219,33 @@ function hideHoverRing() {
     hoverRingSprite.material.map.dispose();
     hoverRingSprite.material.dispose();
     hoverRingSprite = null;
+  }
+}
+
+function showHoverLabel(position, text) {
+  hideHoverLabel();
+  const tex = createLabelTexture(text, 0.9);
+  const mat = new THREE.SpriteMaterial({
+    map: tex,
+    blending: THREE.NormalBlending,
+    depthWrite: false,
+    depthTest: false,
+    transparent: true,
+    alphaTest: 0.01,
+    opacity: 0.95,
+  });
+  hoverLabelSprite = new THREE.Sprite(mat);
+  hoverLabelSprite.position.copy(position).add(new THREE.Vector3(0, 0.5, 0));
+  hoverLabelSprite.scale.set(2.8, 0.7, 1);
+  spriteGroup.add(hoverLabelSprite);
+}
+
+function hideHoverLabel() {
+  if (hoverLabelSprite) {
+    spriteGroup.remove(hoverLabelSprite);
+    hoverLabelSprite.material.map.dispose();
+    hoverLabelSprite.material.dispose();
+    hoverLabelSprite = null;
   }
 }
 
@@ -554,6 +582,15 @@ function projectVec(vec) {
   const result = [0, 0, 0];
   for (let c = 0; c < 3; c++) {
     for (let d = 0; d < DIM; d++) result[c] += centered[d] * components[c][d];
+  }
+  // Map into the same min-max ±10 space the cloud positions were normalized
+  // into (see tools/augment_corpus.py), so arithmetic results land in the
+  // cloud's coordinate system rather than the raw ~±0.5 PCA space.
+  if (corpusPCA.pos_min && corpusPCA.pos_max) {
+    for (let c = 0; c < 3; c++) {
+      const span = corpusPCA.pos_max[c] - corpusPCA.pos_min[c];
+      result[c] = span ? ((result[c] - corpusPCA.pos_min[c]) / span) * 20 - 10 : 0;
+    }
   }
   return result;
 }
@@ -989,6 +1026,7 @@ function clampCardPosition(px, py) {
 }
 
 function showInfoCard(worldPos, item, idx, screenX, screenY) {
+  restoreHoverColor();
   const px = Math.max(0, Math.min(window.innerWidth, screenX));
   const py = Math.max(0, Math.min(window.innerHeight, screenY));
 
@@ -1249,7 +1287,7 @@ function showObservatory() {
     // 6. Footer
     const modelId = corpusModel ? corpusModel.id : 'sentence-transformers/all-MiniLM-L6-v2';
     const corpusSize = corpusModel ? corpusModel.corpus_size.toLocaleString() : '?';
-    const variance = corpusModel && corpusModel.variance_explained ? (corpusModel.variance_explained[0] * 100).toFixed(1) : '?';
+    const variance = corpusPCA && corpusPCA.explained_variance_ratio ? (corpusPCA.explained_variance_ratio.reduce((a, b) => a + b, 0) * 100).toFixed(1) : '?';
     const version = corpusModel ? corpusModel.corpus_version : '?';
     let footerHtml = `<span>model: <span style="color:var(--fg)">${modelId}</span></span>
       <span class="observatory-footer-sep">\u00b7</span>
@@ -1413,12 +1451,14 @@ renderer.domElement.addEventListener('click', (e) => {
 });
 
 function restoreHoverColor() {
-  if (hoveredIdx < 0 || !savedHoverColor || !corpusColors) return;
-  corpusColors[hoveredIdx * 3] = savedHoverColor[0];
-  corpusColors[hoveredIdx * 3 + 1] = savedHoverColor[1];
-  corpusColors[hoveredIdx * 3 + 2] = savedHoverColor[2];
-  if (corpusGeometry && corpusGeometry.attributes.color) corpusGeometry.attributes.color.needsUpdate = true;
+  if (hoveredIdx >= 0 && savedHoverColor && corpusColors) {
+    corpusColors[hoveredIdx * 3] = savedHoverColor[0];
+    corpusColors[hoveredIdx * 3 + 1] = savedHoverColor[1];
+    corpusColors[hoveredIdx * 3 + 2] = savedHoverColor[2];
+    if (corpusGeometry && corpusGeometry.attributes.color) corpusGeometry.attributes.color.needsUpdate = true;
+  }
   hideHoverRing();
+  hideHoverLabel();
   hoveredIdx = -1;
   savedHoverColor = null;
 }
@@ -1450,13 +1490,13 @@ renderer.domElement.addEventListener('pointermove', (e) => {
   hoveredIdx = best.index;
   const i = best.index * 3;
   savedHoverColor = [corpusColors[i], corpusColors[i + 1], corpusColors[i + 2]];
-  const factor = 3.5;
-  corpusColors[i] = Math.min(1, savedHoverColor[0] * factor);
-  corpusColors[i + 1] = Math.min(1, savedHoverColor[1] * factor);
-  corpusColors[i + 2] = Math.min(1, savedHoverColor[2] * factor);
+  corpusColors[i] = 0.0;
+  corpusColors[i + 1] = 0.85;
+  corpusColors[i + 2] = 1.0;
   if (corpusGeometry && corpusGeometry.attributes.color) corpusGeometry.attributes.color.needsUpdate = true;
   renderer.domElement.style.cursor = 'pointer';
   showHoverRing(best.point);
+  showHoverLabel(best.point, corpusItems[best.index].name);
 });
 
 helpBtn.addEventListener('click', (e) => {
