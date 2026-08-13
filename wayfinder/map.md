@@ -34,7 +34,7 @@ Ship the Semantic Arithmetic Playground to `detimzhao.dev` with the real math co
 
 ## Next step
 
-_None — Phase 1 is shipped to the repo-native staging URL. Remaining roadmap (custom domain promotion, Phase 2 self-corpus, v1.5 movies corpus) is deferred and tracked in `PLAN.md`, not as open wayfinder tickets._
+- [T15 — Promote staging to custom domain detimzhao.dev](tickets/T15-custom-domain-detimzhao-dev.md) — open task. Pages custom domain `detimzhao.dev` already set (Actions-based; stored in Pages config, no CNAME file — `configure-pages@v5` emits it). Blocker: captain must repoint Cloudflare DNS off the `.com` redirect — apex A records → GitHub Pages IPs (DNS-only/grey cloud) plus optional `www` CNAME — then GitHub verifies, issues the cert, and we enforce HTTPS and verify `https://detimzhao.dev/`.
 
 ## Not yet specified
 
