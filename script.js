@@ -1682,6 +1682,9 @@ function startGhostRotation() {
 function stopGhostRotation() {
   ghostRotationActive = false;
   if (ghostRotationTimer) { clearInterval(ghostRotationTimer); ghostRotationTimer = null; }
+  // Clear any in-flight inline opacity from the rotation interval
+  ghostText.style.transition = '';
+  ghostText.style.opacity = '';
 }
 
 async function init() {
@@ -1703,9 +1706,12 @@ async function init() {
     setTimeout(() => {
       if (ghostRotationActive && !formulaInput.value.trim()) {
         stopGhostRotation();
-        formulaInput.value = 'transformer - attention + diffusion';
         ghostText.classList.remove('visible');
-        handleFormula('transformer - attention + diffusion');
+        // Small delay to let ghost text fade out before filling input
+        setTimeout(() => {
+          formulaInput.value = 'transformer - attention + diffusion';
+          handleFormula('transformer - attention + diffusion');
+        }, 300);
       }
     }, 3500);
   }

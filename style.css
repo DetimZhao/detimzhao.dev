@@ -444,7 +444,11 @@ canvas { display: block; }
 
 .observatory-close {
   color: var(--muted);
-  cursor: default;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+  padding: 0 4px;
+  transition: color 0.2s ease;
 }
 
 .observatory-close:hover { color: var(--accent); }
@@ -637,5 +641,52 @@ canvas { display: block; }
     height: 28px;
     padding: 0 10px;
     font-size: 11px;
+  }
+
+  .observatory-panel {
+    max-width: 100%;
+    width: calc(100vw - 16px);
+    max-height: 80vh;
+    font-size: 12px;
+  }
+
+  .observatory-header {
+    font-size: 11px;
+    padding: 10px 12px;
+  }
+
+  .observatory-section {
+    padding: 10px 12px;
+  }
+
+  .observatory-heatmap-name {
+    width: 60px;
+    font-size: 10px;
+  }
+
+  .observatory-cell {
+    width: 8px;
+    height: 10px;
+  }
+
+  .observatory-neighbor-name {
+    width: 120px;
+    font-size: 11px;
+  }
+
+  .observatory-neighbor-score {
+    width: 40px;
+    font-size: 10px;
+  }
+
+  .observatory-pca-chip {
+    font-size: 10px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .observatory-footer {
+    font-size: 9px;
+    gap: 12px;
   }
 }
