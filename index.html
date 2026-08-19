@@ -32,7 +32,14 @@
     >
     <span class="ghost-text visible" id="ghost-text" aria-hidden="true">type a word or formula…</span>
   </div>
+  <button class="send-btn" id="send-btn" aria-label="Run formula" title="Run formula">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8.707 1.707a1 1 0 00-1.414 0L2.586 6.414a1 1 0 001.414 1.414L7 4.414V12a1 1 0 102 0V4.414l2.999 3.001a1 1 0 001.414-1.414L8.707 1.707z"/>
+    </svg>
+  </button>
 </div>
+
+<button class="inline-clear" id="clear-btn" aria-label="Clear trails" title="Clear all trails">clear all</button>
 
 <div class="pipeline" id="pipeline">
   <span class="pipe-stage" data-stage="embed">embed 384d</span>
@@ -56,8 +63,7 @@
 </div>
 
 <div class="bottom-buttons">
-  <button class="bottom-btn" id="clear-btn" aria-label="Clear trails" title="Clear all trails">×</button>
-  <button class="bottom-btn" id="help-btn" aria-label="Help">?</button>
+  <button class="bottom-btn bottom-btn--labeled" id="help-btn" aria-label="Inspect pipeline" title="Open observatory"><span class="bottom-btn-icon">?</span> <span class="bottom-btn-label">inspect</span></button>
 </div>
 
 <div class="observatory-overlay" id="observatory-overlay">

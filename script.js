@@ -31,6 +31,7 @@ const infoCardDesc = document.getElementById('info-card-desc');
 const infoCardList = document.getElementById('info-card-list');
 const infoCardSource = document.getElementById('info-card-source');
 const helpBtn = document.getElementById('help-btn');
+const sendBtn = document.getElementById('send-btn');
 const formulaInput = document.getElementById('formula-input');
 const ghostText = document.getElementById('ghost-text');
 const inputContainer = document.getElementById('input-container');
@@ -803,7 +804,7 @@ function clearAllTrails() {
   inputContainer.classList.remove('active');
   hidePipeline();
   formulaInput.value = '';
-  ghostText.innerHTML = 'type a word or formula\u2026';
+  ghostText.innerHTML = '\u00a0';
   ghostText.classList.add('visible');
   cancelStatusLineTimeout();
   statusLine.classList.remove('visible');
@@ -814,9 +815,11 @@ function updateTrailCount() {
   if (trails.length === 0) {
     trailCount.textContent = '';
     trailCount.classList.remove('visible');
+    clearBtn.classList.remove('visible');
   } else {
     trailCount.textContent = `${trails.length} trail${trails.length !== 1 ? 's' : ''}`;
     trailCount.classList.add('visible');
+    clearBtn.classList.add('visible');
   }
 }
 
@@ -1338,6 +1341,7 @@ function setPipelineAnnotation(text) {
 
 // ===== Event Handlers =====
 formulaInput.addEventListener('keydown', (e) => {
+  stopGhostRotation();
   if (e.key === 'Enter') {
     const value = formulaInput.value.trim();
     if (value === '/clear') {
@@ -1385,6 +1389,7 @@ formulaInput.addEventListener('keydown', (e) => {
 });
 
 formulaInput.addEventListener('input', () => {
+  stopGhostRotation();
   const value = formulaInput.value.trim();
   if (value.length > 0) {
     ghostText.classList.remove('visible');
@@ -1504,10 +1509,22 @@ helpBtn.addEventListener('click', (e) => {
   showObservatory();
 });
 
+sendBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const value = formulaInput.value.trim();
+  if (value) {
+    formulaInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+  }
+});
+
+// Toggle send button brightness when input has text
+formulaInput.addEventListener('input', () => {
+  const hasText = formulaInput.value.trim().length > 0;
+  sendBtn.classList.toggle('has-text', hasText);
+});
+
 clearBtn.addEventListener('click', (e) => {
   e.stopPropagation();
-  clearBtn.classList.add('clear-active');
-  setTimeout(() => clearBtn.classList.remove('clear-active'), 300);
   clearAllTrails();
 });
 
@@ -1629,6 +1646,44 @@ function animate() {
 
 // ===== Init =====
 let schemaParsed = false;
+
+// Rotating ghost text examples for first load
+const GHOST_EXAMPLES = [
+  'try: king - man + woman',
+  'try: transformer - attention + diffusion',
+  'try: diffusion - gan + transformer',
+  'try: bert - nlp + cv',
+  'try: reinforcement-learning - q-learning + policy-gradient',
+  'click any point to inspect',
+];
+let ghostRotationTimer = null;
+let ghostRotationIdx = 0;
+let ghostRotationActive = false;
+
+function startGhostRotation() {
+  if (ghostRotationTimer) clearInterval(ghostRotationTimer);
+  ghostRotationIdx = 0;
+  ghostRotationActive = true;
+  ghostText.innerHTML = GHOST_EXAMPLES[0];
+  ghostText.classList.add('visible');
+  ghostRotationTimer = setInterval(() => {
+    if (!ghostRotationActive) { clearInterval(ghostRotationTimer); return; }
+    ghostRotationIdx = (ghostRotationIdx + 1) % GHOST_EXAMPLES.length;
+    ghostText.style.transition = 'opacity 0.4s ease';
+    ghostText.style.opacity = '0';
+    setTimeout(() => {
+      ghostText.innerHTML = GHOST_EXAMPLES[ghostRotationIdx];
+      ghostText.style.opacity = '';
+      ghostText.classList.add('visible');
+    }, 450);
+  }, 4000);
+}
+
+function stopGhostRotation() {
+  ghostRotationActive = false;
+  if (ghostRotationTimer) { clearInterval(ghostRotationTimer); ghostRotationTimer = null; }
+}
+
 async function init() {
   loadFromHash();
 
@@ -1642,6 +1697,17 @@ async function init() {
   if (formula) {
     await vectorPromise;
     handleFormula(formula);
+  } else {
+    // No hash — show rotating ghost text, then auto-run demo after 3s
+    startGhostRotation();
+    setTimeout(() => {
+      if (ghostRotationActive && !formulaInput.value.trim()) {
+        stopGhostRotation();
+        formulaInput.value = 'transformer - attention + diffusion';
+        ghostText.classList.remove('visible');
+        handleFormula('transformer - attention + diffusion');
+      }
+    }, 3500);
   }
 
   const { debug } = parseHashParams(window.location.hash);
@@ -1649,5 +1715,6 @@ async function init() {
 }
 
 animate();
-formulaInput.focus();
+// Focus input, but let ghost rotation start first
+setTimeout(() => formulaInput.focus(), 100);
 init();

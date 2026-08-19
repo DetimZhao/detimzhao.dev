@@ -50,6 +50,55 @@ canvas { display: block; }
   pointer-events: auto;
 }
 
+.send-btn {
+  background: none;
+  border: none;
+  color: var(--accent-dim);
+  cursor: pointer;
+  padding: 0 0 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.4;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.send-btn:hover {
+  opacity: 1;
+  color: var(--accent);
+}
+
+.send-btn.has-text {
+  opacity: 0.8;
+}
+
+.inline-clear {
+  background: none;
+  border: none;
+  color: oklch(0.55 0.08 25);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, color 0.2s ease;
+  text-align: center;
+}
+
+.inline-clear.visible {
+  opacity: 0.7;
+  pointer-events: auto;
+}
+
+.inline-clear:hover {
+  opacity: 1;
+  color: oklch(0.60 0.12 25);
+}
+
 .bottom-bar {
   position: fixed;
   bottom: 40px;
@@ -112,15 +161,18 @@ canvas { display: block; }
   top: 0;
   left: 0;
   color: var(--muted);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 400;
   line-height: 1.5;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 1.2s ease;
+  transition: opacity 0.6s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.ghost-text.visible { opacity: 0.5; }
+.ghost-text.visible { opacity: 0.45; }
 .ghost-text .dim { opacity: 0.35; }
 
 .pipeline {
@@ -291,20 +343,32 @@ canvas { display: block; }
 }
 
 .bottom-btn {
-  width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: 16px;
   border: 1px solid var(--border);
   background: oklch(0.12 0 0 / 0.7);
   color: var(--muted);
   font-family: inherit;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 5px;
+  padding: 0 12px;
   transition: color 0.3s ease, border-color 0.3s ease;
+}
+
+.bottom-btn--labeled .bottom-btn-icon {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.bottom-btn--labeled .bottom-btn-label {
+  font-size: 11px;
+  letter-spacing: 0.02em;
 }
 
 .bottom-btn:hover {
@@ -538,4 +602,40 @@ canvas { display: block; }
 
 @keyframes blink {
   50% { opacity: 0; }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 480px) {
+  .input-container {
+    min-width: 0;
+    width: calc(100vw - 24px);
+    padding: 12px 14px;
+  }
+
+  .pipeline {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 6px;
+    font-size: 10px;
+  }
+
+  .pipe-stage {
+    padding: 4px 7px;
+    font-size: 10px;
+  }
+
+  .pipe-arrow {
+    font-size: 10px;
+  }
+
+  .bottom-buttons {
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .bottom-btn {
+    height: 28px;
+    padding: 0 10px;
+    font-size: 11px;
+  }
 }
