@@ -65,9 +65,12 @@ controls.autoRotateSpeed = 0.25;
 controls.minDistance = 5;
 controls.maxDistance = 40;
 controls.target.set(0, 0, 0);
-controls.enablePan = true;
+// Detect touch device for adjusted controls
+const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+controls.enablePan = !isTouchDevice;
 controls.enableZoom = true;
-controls.zoomSpeed = 0.8;
+controls.zoomSpeed = isTouchDevice ? 1.5 : 0.8;
+controls.rotateSpeed = isTouchDevice ? 0.8 : 1.0;
 
 const lineGroup = new THREE.Group();
 scene.add(lineGroup);
@@ -1349,6 +1352,18 @@ formulaInput.addEventListener('keydown', (e) => {
       return;
     }
     if (!value) return;
+    // Deduplicate — skip if same formula already has a trail
+    const duplicate = trails.some(t => t.formula.toLowerCase() === value.toLowerCase());
+    if (duplicate) {
+      cancelStatusLineTimeout();
+      statusLine.textContent = 'already on screen';
+      statusLine.classList.add('visible');
+      statusLine.classList.remove('error');
+      statusLineTimeout = setTimeout(() => {
+        statusLine.classList.remove('visible');
+      }, 2000);
+      return;
+    }
     handleFormula(value);
     ghostText.classList.remove('visible');
     cancelStatusLineTimeout();
