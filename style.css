@@ -223,20 +223,25 @@ canvas { display: block; }
 .annotation.visible { opacity: 0.65; }
 
 .status-line {
-  position: fixed;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
+  position: relative;
+  text-align: center;
   color: var(--muted);
   font-size: 13px;
   letter-spacing: 0.02em;
   opacity: 0;
   transition: opacity 0.5s ease;
   pointer-events: none;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.status-line.visible { opacity: 1; }
+.status-line.visible {
+  opacity: 1;
+  min-height: 1.5em;
+  margin-bottom: 6px;
+}
+
+.status-line.visible { opacity: 1; min-height: 1.5em; margin-bottom: 6px; }
 .status-line.error { color: oklch(0.50 0.10 20); }
 
 .info-card {
