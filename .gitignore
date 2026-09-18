@@ -6,3 +6,6 @@ __pycache__/
 screenshots/
 test-screenshots/
 test-*.png
+
+# local-only tooling config (opencode CLI)
+opencode.json
