@@ -3,82 +3,168 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Semantic Arithmetic Playground</title>
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>detimzhao — lab</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=follow_the_signs" />
+<style>
+  @font-face { font-family: 'Commit Mono'; src: url('fonts/commit-mono-latin-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+  @font-face { font-family: 'Commit Mono'; src: url('fonts/commit-mono-latin-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #3e00b2;
+    --fg: #ffe89f;
+    --muted: color-mix(in srgb, var(--fg) 55%, var(--bg));
+    --accent: #fff3c4;
+    --mono: "Commit Mono", "JetBrains Mono", ui-monospace, monospace;
+    --prose: "DM Sans", sans-serif;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--mono);
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+    overflow-x: hidden;
+  }
+  /* ambient generative field — static, no blur/animation (GPU accel off) */
+  .aurora {
+    position: fixed; inset: 0;
+    z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(42% 34% at 22% 26%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 72%),
+      radial-gradient(32% 28% at 80% 20%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 72%),
+      radial-gradient(46% 38% at 66% 80%, color-mix(in srgb, var(--fg) 13%, transparent), transparent 78%),
+      radial-gradient(28% 24% at 28% 84%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 72%);
+  }
+  .scanlines {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0 1px, transparent 1px 3px);
+  }
+  .stage {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; align-items: center;
+    padding: 64px 28px;
+  }
+  .sheet { width: 100%; max-width: 640px; margin: 0 auto; }
+  .tagline { color: var(--muted); font-family: var(--prose); font-size: 14.5px; letter-spacing: 0.02em; line-height: 1.6; margin-top: 6px; }
+  h1 {
+    font-size: clamp(44px, 9vw, 76px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.02;
+    margin-top: 26px;
+    text-shadow: 0 0 42px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  h1 .dot { color: var(--accent); }
+  .comlink { display: inline-block; margin-top: 18px; font-size: 14px; color: var(--muted); text-decoration: none; }
+  .comlink .arr { color: var(--accent); }
+  .comlink .note .slash { font-family: var(--mono); color: var(--accent); }
+  .comlink .arr.material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-weight: 500; font-size: 21px; line-height: 1; vertical-align: -3px; padding-right: 4px; color: var(--accent); }
+  .comlink:hover { color: var(--accent); }
+  .proj-label { margin-top: 64px; color: var(--accent); font-size: 12.5px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .plist { margin-top: 10px; border-top: 1px solid color-mix(in srgb, var(--fg) 22%, transparent); }
+  .p {
+    display: block; text-decoration: none;
+    padding: 22px 4px;
+    border-bottom: 1px solid color-mix(in srgb, var(--fg) 22%, transparent);
+    position: relative;
+  }
+  .p .pt { font-size: 26px; font-weight: 700; color: var(--fg); transition: color .15s, transform .15s; display: inline-block; }
+  .p .pd { color: var(--muted); font-family: var(--prose); font-size: 13.5px; margin-top: 5px; }
+  .p .idx { color: var(--muted); font-size: 12px; display: block; margin-bottom: 6px; }
+  .p .pt::after { content: " ↗"; color: var(--accent); font-size: 14px; opacity: 0; transition: opacity .15s; }
+  .p:hover .pt { color: var(--accent); transform: translateX(4px); }
+  .p:hover .pt::after { opacity: 1; }
+  .p:hover .pd { color: var(--fg); }
+  .p.soon { opacity: .38; cursor: default; }
+  .p.soon:hover .pt { color: var(--fg); transform: none; }
+  .p:hover .pmore, .p:focus-visible .pmore { display: block; }
+  .pmore { display: none; margin-top: 6px; font-family: var(--prose); font-size: 12.5px; color: var(--muted); opacity: .85; }
+  .pal .k { color: var(--accent); }
+  .foot { margin-top: 56px; font-size: 13.5px; color: var(--muted); }
+  .foot a { color: var(--muted); text-decoration: none; }
+  .foot a:hover { color: var(--accent); }
+</style>
 </head>
 <body>
+  <div class="aurora"></div>
+  <div class="scanlines"></div>
 
-<div class="scanlines"></div>
+  <main class="stage">
+    <div class="sheet">
+      <div class="tagline"><span>lab of semantic arithmetic &amp; browser tools:</span><br>everything local, nothing uploaded</div>
+      <h1>detimzhao<span class="dot">.</span></h1>
+      <a class="comlink" href="https://detimzhao.com" target="_blank" rel="noopener"><span class="arr material-symbols-outlined" aria-hidden="true">follow_the_signs</span> detimzhao.com <span class="note"><span class="slash">//</span> the human part: bio, resume, etc.</span></a>
 
-<div class="trail-count" id="trail-count"></div>
+      <div class="proj-label">projects</div>
+      <div class="plist">
+        <a class="p" href="/projects/playground">
+          <span class="idx">01</span>
+          <span class="pt">playground</span>
+          <div class="pd">semantic vector arithmetic on a 3D point cloud — formulas become space</div>
+          <div class="pmore">type `king - man + woman` and see where it lands — ~3k AI/ML concepts, frozen. click a point to inspect its neighbors.</div>
+        </a>
+        <div class="p soon">
+          <span class="idx">02</span>
+          <span class="pt">tools</span>
+          <div class="pd">coming soon — jpeg conversion and friends, files never leave your device</div>
+        </div>
+        <div class="p soon">
+          <span class="idx">03</span>
+          <span class="pt">palette</span>
+          <div class="pd">coming soon — an accessible palette generator</div>
+        </div>
+        <div class="p soon">
+          <span class="idx">04</span>
+          <span class="pt">log</span>
+          <div class="pd">writing in progress</div>
+        </div>
+      </div>
 
-<div class="bottom-bar">
-<div class="status-line" id="status-line"></div>
-<div class="input-container" id="input-container">
-  <span class="prompt">&gt;</span>
-  <div class="input-wrapper">
-    <input
-      type="text"
-      class="formula-input"
-      id="formula-input"
-      placeholder="type a word or formula…"
-      spellcheck="false"
-      autocomplete="off"
-    >
-    <span class="ghost-text visible" id="ghost-text" aria-hidden="true">type a word or formula…</span>
-  </div>
-  <button class="send-btn" id="send-btn" aria-label="Run formula" title="Run formula">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      <path d="M8.707 1.707a1 1 0 00-1.414 0L2.586 6.414a1 1 0 001.414 1.414L7 4.414V12a1 1 0 102 0V4.414l2.999 3.001a1 1 0 001.414-1.414L8.707 1.707z"/>
-    </svg>
-  </button>
-</div>
-
-<button class="inline-clear" id="clear-btn" aria-label="Clear trails" title="Clear all trails">clear all</button>
-
-<div class="pipeline" id="pipeline">
-  <span class="pipe-stage" data-stage="embed">embed 384d</span>
-  <span class="pipe-arrow">&rarr;</span>
-  <span class="pipe-stage" data-stage="math">arithmetic</span>
-  <span class="pipe-arrow">&rarr;</span>
-  <span class="pipe-stage" data-stage="pca">PCA-3</span>
-  <span class="pipe-arrow">&rarr;</span>
-  <span class="pipe-stage" data-stage="knn">top-k neighbors</span>
-</div>
-
-<div class="annotation" id="annotation"></div>
-</div>
-
-<div class="info-card" id="info-card">
-  <div class="info-card-word" id="info-card-word"></div>
-  <div class="info-card-desc" id="info-card-desc"></div>
-  <div class="info-card-neighbors-label" id="info-card-neighbors-label">neighbors</div>
-  <ul class="info-card-list" id="info-card-list"></ul>
-  <div class="info-card-source" id="info-card-source"></div>
-</div>
-
-<div class="bottom-buttons">
-  <button class="bottom-btn bottom-btn--labeled" id="help-btn" aria-label="Inspect pipeline" title="Open observatory"><span class="bottom-btn-icon">?</span> <span class="bottom-btn-label">inspect</span></button>
-</div>
-
-<div class="observatory-overlay" id="observatory-overlay">
-  <div class="observatory-panel" id="observatory-panel"></div>
-</div>
-
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
-
-<script type="module" src="script.js"></script>
+      <div class="foot">© 2026 Detim Zhao&nbsp;|&nbsp;<span class="pal">[ <span class="k">r</span> ] reroll | [ <span class="k">p</span> ] prev | [ <span class="k">s</span> ] pin</span></div>
+    </div>
+  </main>
+<script>
+    // --- random accessible palette: fresh on arrival (WCAG AA), [s] pins, [r] rerolls, [p] prev ---
+    const KEY = 'detimzhao.palette';
+    const store = { get() { try { return JSON.parse(localStorage.getItem(KEY)); } catch(e) { return null; } },
+                    set(v) { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch(e) {} } };
+    // huemint-inspired: constrained, cohesive, muted (no bright saturated backgrounds)
+    const hsl2hex = (h,s,l) => { s/=100; l/=100; const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l), f=n=>{const v=Math.min(k(n)-3,9-k(n)); return l-a*Math.max(-1,Math.min(1,v))}; const to=x=>Math.round(x*255).toString(16).padStart(2,'0'); return '#'+to(f(0))+to(f(8))+to(f(4)); };
+    const hue = () => 0 | (Math.random()*360);
+    const hist = [];   // bounded session history
+    const cur = {bg:null, fg:null, accent:null, pinned:false};
+    const setPal = p => {
+      Object.assign(cur, p);
+      const s = document.documentElement.style;
+      s.setProperty('--bg', cur.bg); s.setProperty('--fg', cur.fg); s.setProperty('--accent', cur.accent);
+      store.set({ ...cur, history: hist });
+    };
+    const reroll = () => {
+      if (cur.bg) hist.push({bg:cur.bg, fg:cur.fg, accent:cur.accent});
+      if (hist.length > 50) hist.shift();
+      const H = hue();
+      const bg     = hsl2hex(H, 20+Math.random()*20, 9+Math.random()*16);                  // dark muted bg
+      const fg     = hsl2hex(H, 8+Math.random()*10, 88+Math.random()*7);                   // soft light text
+      const accent = hsl2hex((H+40+Math.random()*110)%360, 58+Math.random()*30, 52+Math.random()*15); // one mid accent
+      setPal({bg,fg,accent,pinned:false});
+    };
+    const prev = () => { const s = hist.pop(); if (s) setPal({ ...s, pinned:false }); };
+    const pin = () => setPal({...cur, pinned:true});
+    window.addEventListener('keydown', e => {
+      if ((e.key === 'r' || e.key === 'p' || e.key === 's') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        if (e.key === 'r') reroll(); else if (e.key === 'p') prev(); else pin();
+      }
+    });
+    const saved = store.get();
+    if (saved && saved.history) saved.history.forEach(h => hist.push(h));
+    if (saved && saved.pinned) { setPal(saved); } else { reroll(); }
+  </script>
 </body>
 </html>

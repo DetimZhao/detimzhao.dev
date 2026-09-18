@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semantic Arithmetic Playground</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="scanlines"></div>
+
+<div class="trail-count" id="trail-count"></div>
+
+<div class="bottom-bar">
+<div class="status-line" id="status-line"></div>
+<div class="input-container" id="input-container">
+  <span class="prompt">&gt;</span>
+  <div class="input-wrapper">
+    <input
+      type="text"
+      class="formula-input"
+      id="formula-input"
+      placeholder="type a word or formula…"
+      spellcheck="false"
+      autocomplete="off"
+    >
+    <span class="ghost-text visible" id="ghost-text" aria-hidden="true">type a word or formula…</span>
+  </div>
+  <button class="send-btn" id="send-btn" aria-label="Run formula" title="Run formula">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8.707 1.707a1 1 0 00-1.414 0L2.586 6.414a1 1 0 001.414 1.414L7 4.414V12a1 1 0 102 0V4.414l2.999 3.001a1 1 0 001.414-1.414L8.707 1.707z"/>
+    </svg>
+  </button>
+</div>
+
+<button class="inline-clear" id="clear-btn" aria-label="Clear trails" title="Clear all trails">clear all</button>
+
+<div class="pipeline" id="pipeline">
+  <span class="pipe-stage" data-stage="embed">embed 384d</span>
+  <span class="pipe-arrow">&rarr;</span>
+  <span class="pipe-stage" data-stage="math">arithmetic</span>
+  <span class="pipe-arrow">&rarr;</span>
+  <span class="pipe-stage" data-stage="pca">PCA-3</span>
+  <span class="pipe-arrow">&rarr;</span>
+  <span class="pipe-stage" data-stage="knn">top-k neighbors</span>
+</div>
+
+<div class="annotation" id="annotation"></div>
+</div>
+
+<div class="info-card" id="info-card">
+  <div class="info-card-word" id="info-card-word"></div>
+  <div class="info-card-desc" id="info-card-desc"></div>
+  <div class="info-card-neighbors-label" id="info-card-neighbors-label">neighbors</div>
+  <ul class="info-card-list" id="info-card-list"></ul>
+  <div class="info-card-source" id="info-card-source"></div>
+</div>
+
+<div class="bottom-buttons">
+  <button class="bottom-btn bottom-btn--labeled" id="help-btn" aria-label="Inspect pipeline" title="Open observatory"><span class="bottom-btn-icon">?</span> <span class="bottom-btn-label">inspect</span></button>
+</div>
+
+<div class="observatory-overlay" id="observatory-overlay">
+  <div class="observatory-panel" id="observatory-panel"></div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
