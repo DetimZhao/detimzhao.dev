@@ -2,83 +2,123 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Semantic Arithmetic Playground</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Semantic Playground</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div class="scanlines"></div>
-
-<div class="trail-count" id="trail-count"></div>
-
-<div class="bottom-bar">
-<div class="status-line" id="status-line"></div>
-<div class="input-container" id="input-container">
-  <span class="prompt">&gt;</span>
-  <div class="input-wrapper">
-    <input
-      type="text"
-      class="formula-input"
-      id="formula-input"
-      placeholder="type a word or formula…"
-      spellcheck="false"
-      autocomplete="off"
-    >
-    <span class="ghost-text visible" id="ghost-text" aria-hidden="true">type a word or formula…</span>
+<div class="window">
+  <div class="titlebar">
+    <div class="titlebar-title" id="win-title"><span class="dot"></span><span class="tt">detimzhao — Semantic Playground</span></div>
+    <div class="titlebar-right">
+      <button class="tb-btn" id="theme-btn" title="Toggle light/dark"><span class="tb-ico" id="theme-ico">☾</span><span class="tb-label" id="theme-label">theme</span></button>
+      <button class="tb-btn" id="dbg-btn"><span class="tb-ico">⚙</span><span class="tb-label">settings</span></button>
+      <button class="tb-btn accent" id="inspect-btn"><span class="tb-ico">?</span><span class="tb-label">inspect</span></button>
+    </div>
   </div>
-  <button class="send-btn" id="send-btn" aria-label="Run formula" title="Run formula">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      <path d="M8.707 1.707a1 1 0 00-1.414 0L2.586 6.414a1 1 0 001.414 1.414L7 4.414V12a1 1 0 102 0V4.414l2.999 3.001a1 1 0 001.414-1.414L8.707 1.707z"/>
-    </svg>
-  </button>
+  <div class="window-body">
+    <aside class="leftpanel" id="leftpanel">
+      <div class="lp-head" id="lp-head">
+        <span class="lp-title" id="lp-title">sources</span>
+        <button class="lp-collapse" id="lp-collapse" title="Collapse/expand" aria-label="Collapse panel">«</button>
+      </div>
+      <div class="lp-point" id="lp-point" style="display:none;">
+        <button class="lp-point-back" id="lp-point-back" title="Back to types">← back</button>
+        <div class="lp-point-name" id="lp-point-name"></div>
+        <div class="lp-point-desc" id="lp-point-desc"></div>
+        <div class="lp-point-label">neighbors</div>
+        <ul class="d-neighbors" id="lp-point-nb"></ul>
+        <div class="lp-point-source" id="lp-point-source"></div>
+        <div class="lp-point-foot" id="lp-point-foot"></div>
+      </div>
+      <button class="lp-all on" id="lp-all"><span class="chk" id="lp-all-chk">✓</span><span class="lp-all-txt">Select all</span></button>
+      <div class="lp-list" id="lp-list"></div>
+      <div class="lp-foot" id="lp-foot">AI/ML · loading</div>
+    </aside>
+    <div class="stage" id="stage">
+      <div class="stage-label">latent space</div>
+      <div class="model-badge">
+        <div class="m-label">Semantic Model</div>
+        <div class="m-title">all-MiniLM-L6-v2</div>
+        <div class="m-sub"><span id="m-nodes">…</span> concepts · <span id="m-dim">384</span>-dim</div>
+      </div>
+      <div class="stage-hint">drag to rotate · scroll to zoom · click a point to inspect</div>
+      <div class="cse" id="cse">
+        <div class="cse-head">
+          <span class="cse-label">Semantic Search</span>
+          <span class="cse-count" id="cse-count">…</span>
+        </div>
+        <div class="cse-input">
+          <div class="eq-box">
+            <span class="eq-prompt">&gt;</span>
+            <input class="eq-input" id="eq" type="text" placeholder="transformer - attention + diffusion" spellcheck="false" autocomplete="off">
+          </div>
+          <button class="eq-send" id="eq-send" aria-label="Run formula"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8.707 1.707a1 1 0 0 0-1.414 0L2.586 6.414a1 1 0 0 0 1.414 1.414L7 4.414V12a1 1 0 1 0 2 0V4.414l2.999 3.001a1 1 0 0 0 1.414-1.414L8.707 1.707z"/></svg></button>
+        </div>
+        <div class="cse-clear"><button class="inline-clear" id="clear-btn" title="Clear all trails">clear all</button></div>
+      </div>
+      <div class="tip" id="tip"><span class="t-dot" id="tip-dot"></span><span id="tip-text"></span></div>
+    </div>
+    <aside class="detail" id="detail">
+      <div class="detail-scroll" id="detail-scroll">
+        <div class="d-label">inspection</div>
+        <div id="obs-body"></div>
+      </div>
+    </aside>
+  </div>
+  <div class="mpoint" id="mpoint">
+    <button class="mpoint-back" id="mpoint-back" title="Back">← back</button>
+    <div class="lp-point-name" id="mpoint-name"></div>
+    <div class="lp-point-desc" id="mpoint-desc"></div>
+    <div class="lp-point-label">neighbors</div>
+    <ul class="d-neighbors" id="mpoint-nb"></ul>
+    <div class="lp-point-source" id="mpoint-source"></div>
+  </div>
+  <div class="statusbar">
+    <div class="sb-left">
+      <span><b id="sb-nodes">…</b> concepts</span>
+      <span><b id="sb-dim">384</b>-dim</span>
+      <span class="ver" id="ver">v8.0</span>
+    </div>
+    <div class="sb-right"><span id="sb-formula"></span></div>
+  </div>
 </div>
 
-<button class="inline-clear" id="clear-btn" aria-label="Clear trails" title="Clear all trails">clear all</button>
-
-<div class="pipeline" id="pipeline">
-  <span class="pipe-stage" data-stage="embed">embed 384d</span>
-  <span class="pipe-arrow">&rarr;</span>
-  <span class="pipe-stage" data-stage="math">arithmetic</span>
-  <span class="pipe-arrow">&rarr;</span>
-  <span class="pipe-stage" data-stage="pca">PCA-3</span>
-  <span class="pipe-arrow">&rarr;</span>
-  <span class="pipe-stage" data-stage="knn">top-k neighbors</span>
+<div class="dbg" id="dbg">
+  <div class="dbg-head"><div class="dbg-title">settings</div><button class="dbg-close" id="dbg-close" aria-label="Close settings">×</button></div>
+  <div class="dbg-group">rendering</div>
+  <div class="perf-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">
+    <span style="display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--mono);color:var(--muted);">
+      performance
+      <span class="perf-help" title="Toggles to high-performance mode: transparent round sprites, bloom off. For max speed / weakest GPUs." style="cursor:help;color:var(--accent-dim);font-weight:700;">?</span>
+    </span>
+    <input type="checkbox" id="d-perf" style="accent-color:var(--accent);width:16px;height:16px;">
+  </div>
+  <div class="perf-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px;">
+    <span style="display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--mono);color:var(--muted);">stats</span>
+    <input type="checkbox" id="d-stats" style="accent-color:var(--accent);width:16px;height:16px;">
+  </div>
+  <div class="dbg-group">sprite adjustment</div>
+  <div><label>brightness</label><div class="row"><input type="range" id="d-bright" min="0" max="3" step="0.01" value="1.50"><span class="val" id="v-bright">1.50</span></div></div>
+  <div><label>glow</label><div class="row"><input type="range" id="d-glow" min="0" max="3" step="0.05" value="1.25"><span class="val" id="v-glow">1.25</span></div></div>
+  <div><label>point size</label><div class="row"><input type="range" id="d-size" min="0.4" max="3" step="0.05" value="1.60"><span class="val" id="v-size">1.60</span></div></div>
+  <div><label>bloom threshold</label><div class="row"><input type="range" id="d-thresh" min="0.01" max="1" step="0.05" value="0.05"><span class="val" id="v-thresh">0.05</span></div></div>
 </div>
 
-<div class="annotation" id="annotation"></div>
+<div class="dbg" id="dbg2" style="right:268px;">
+  <div class="dbg-head"><div class="dbg-title">debug</div><button class="dbg-close" id="dbg2-close" aria-label="Close debug">×</button></div>
+  <div><label>camera zoom</label><div class="row"><input type="range" id="d-zoom" min="12" max="60" step="1" value="40"><span class="val" id="v-zoom">40</span></div></div>
+  <div><label>light bg hex</label><div class="row"><input type="color" id="d-lbg" value="#d1d1d1" style="width:34px;height:24px;padding:0;border:1px solid var(--border);background:transparent;cursor:pointer;flex:none;"><span class="val" id="v-lbg">#d1d1d1</span></div></div>
+  <div><label>theme transition (ms)</label><div class="row"><input type="range" id="d-theme" min="0" max="2000" step="50" value="0"><span class="val" id="v-theme">0</span></div></div>
+  <div style="font-size:10px;font-family:var(--mono);color:var(--muted-dim);margin-top:4px;">first-visit view distance</div>
 </div>
 
-<div class="info-card" id="info-card">
-  <div class="info-card-word" id="info-card-word"></div>
-  <div class="info-card-desc" id="info-card-desc"></div>
-  <div class="info-card-neighbors-label" id="info-card-neighbors-label">neighbors</div>
-  <ul class="info-card-list" id="info-card-list"></ul>
-  <div class="info-card-source" id="info-card-source"></div>
-</div>
-
-<div class="bottom-buttons">
-  <button class="bottom-btn bottom-btn--labeled" id="help-btn" aria-label="Inspect pipeline" title="Open observatory"><span class="bottom-btn-icon">?</span> <span class="bottom-btn-label">inspect</span></button>
-</div>
-
-<div class="observatory-overlay" id="observatory-overlay">
-  <div class="observatory-panel" id="observatory-panel"></div>
-</div>
-
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
-
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script type="module" src="script.js"></script>
 </body>
 </html>

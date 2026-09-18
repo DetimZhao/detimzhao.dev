@@ -1,44 +1,41 @@
 # Semantic Arithmetic Playground
 
-Semantic vector arithmetic explorer with a 3D point cloud interface. Dark terminal aesthetic, zero chrome.
+Semantic vector arithmetic explorer: a 3D point cloud of ~1.3k AI/ML concepts (sentence-embedding
+corpus) with vector arithmetic (`transformer - attention + diffusion`), in a windowed ("mac window")
+UI with light/dark themes.
 
 ## Stack
-- Vanilla HTML/CSS/JS
+- Vanilla HTML/CSS/JS (no build step)
 - Three.js 0.160 via CDN importmap
-- JetBrains Mono typeface via Google Fonts
+- Inter + Space Grotesk + JetBrains Mono via Google Fonts
+- Corpus assets generated offline (see `tools/`)
 
 ## Project structure
 ```
-index.html       — app shell
-style.css        — all styles
-script.js        — Three.js scene, formula engine, trails
-brand-spec.md    — design tokens
-data/            — corpus assets (generated offline)
-tools/           — corpus generation scripts
+index.html    — window chrome (titlebar, left panel, stage, inspect panel, statusbar)
+style.css     — all styles (theme tokens, panels, observatory inspect)
+script.js     — Three.js scene, corpus loader, formula engine, trails, inspect
+VERSIONING.md — version scheme (single source: the VERSION const in script.js)
+data/         — corpus assets (generated offline)
+tools/        — corpus generation scripts
 ```
 
 ## Run locally
 ```sh
 python3 -m http.server 8080
 ```
-Or:
-```sh
-npx serve .
-```
-
-## Commands
-- `npm run serve` — start dev server
+(serves the repo root — open `/projects/playground/`)
 
 ## Key interactions
-- Type formula → Enter → renders trail, updates URL hash
-- `/clear` in input → wipes all trails
-- `×` button → wipes all trails (same as /clear)
-- Click point → info card with neighbors + cosine scores
-- `?` button → observatory modal (pipeline diagram)
-- Drag canvas → orbit; scroll → zoom
-- Auto-rotate resumes after 5s idle
-- Esc → dismiss modals, blur input
-- URL hash carries formula (e.g., `#f=king-man+woman`)
+- Type a formula → Enter → renders trail, updates URL hash (`#f=…`)
+- Single token → highlights the node + its nearest neighbours
+- `/clear` or "clear all" → wipes all trails
+- Click a point → left-panel inspection (description, neighbours, source)
+- `inspect` (titlebar) → right panel: formula, 384-dim heatmaps, PCA-3, top-10 neighbours
+- Left panel filters points by corpus source; collapse via `«` or drag
+- Drag canvas → orbit; scroll → zoom; Esc → close panels
+- `theme` (titlebar) → light/dark; `settings` → sprite/bloom/performance
+- URL hash carries the formula — deep-linkable
 
 ## Maintaining this file
 
