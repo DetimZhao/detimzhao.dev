@@ -190,7 +190,7 @@
     };
     const prev = () => { const s = hist.pop(); if (s) setPal({ ...s, pinned:false }); };
     const pin = () => setPal({...cur, pinned:true});
-    const act = a => { if (a === 'reroll') reroll(); else if (a === 'prev') prev(); else if (a === 'pin') pin(); };
+    const act = a => { if (a === 'reroll' || a === 'r') reroll(); else if (a === 'prev' || a === 'p') prev(); else if (a === 'pin' || a === 's') pin(); };
     window.addEventListener('keydown', e => {
       if ((e.key === 'r' || e.key === 'p' || e.key === 's') && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault(); act(e.key);
