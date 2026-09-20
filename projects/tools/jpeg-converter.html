@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>jpeg-converter - detimzhao lab</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  @font-face { font-family: 'Commit Mono'; src: url('/fonts/commit-mono-latin-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+  @font-face { font-family: 'Commit Mono'; src: url('/fonts/commit-mono-latin-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    /* defaults — overridden by the shared palette on load (matches landing) */
+    --bg: #0a0a0a; --fg: #eef0ff; --accent: #fff3c4;
+    --muted: color-mix(in srgb, var(--fg) 55%, var(--bg));
+    --mono: "Commit Mono", "JetBrains Mono", ui-monospace, monospace;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--mono);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    position: relative; overflow-x: hidden;
+  }
+  /* ambient generative field - static, matches landing (GPU accel off) */
+  .aurora {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(42% 34% at 22% 26%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 72%),
+      radial-gradient(32% 28% at 80% 20%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 72%),
+      radial-gradient(46% 38% at 66% 80%, color-mix(in srgb, var(--fg) 13%, transparent), transparent 78%),
+      radial-gradient(28% 24% at 28% 84%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 72%);
+  }
+  .scanlines {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0 1px, transparent 1px 3px);
+  }
+  .topbar {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; align-items: baseline; gap: 0.75em;
+    padding: 0.9em clamp(16px, 4vw, 28px);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--fg) 16%, transparent);
+  }
+  .topbar a { color: var(--fg); text-decoration: none; font-weight: 700; }
+  .topbar a:hover { color: var(--accent); }
+  .topbar .crumb { color: var(--muted); font-weight: 400; }
+  .topbar .dot { color: var(--accent); }
+  main { max-width: 680px; margin: 0 auto; padding: clamp(24px, 5vh, 48px) clamp(16px, 4vw, 28px) 64px; position: relative; z-index: 1; }
+  h1 { font-size: clamp(1.5em, 4vw, 2em); font-weight: 700; letter-spacing: -0.01em; }
+  .privacy { margin-top: 0.6em; color: var(--muted); font-size: 0.85em; }
+  .privacy .l { color: var(--accent); }
+
+  /* drop zone */
+  .drop {
+    margin-top: 2em;
+    border: 1.5px dashed color-mix(in srgb, var(--muted) 60%, transparent);
+    border-radius: 0.7em;
+    padding: 2.2em 1.2em;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .drop:hover, .drop.hover, .drop:focus-visible { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 5%, transparent); }
+  .drop .big { font-weight: 700; }
+  .drop .or { margin: 0.6em 0 0.9em; color: var(--muted); font-size: 0.85em; }
+  .drop button {
+    font-family: var(--mono); font-size: 0.9em; color: var(--fg);
+    background: transparent; border: 1px solid color-mix(in srgb, var(--fg) 30%, transparent);
+    border-radius: 0.5em; padding: 0.6em 1.1em; cursor: pointer;
+    transition: color .15s, border-color .15s;
+    min-height: 44px;
+  }
+  .drop button:hover, .drop button:focus-visible { color: var(--accent); border-color: var(--accent); }
+
+  /* working area */
+  .work { display: none; margin-top: 1.8em; }
+  .panel {
+    border: 1px solid color-mix(in srgb, var(--fg) 18%, transparent);
+    border-radius: 0.7em; padding: 1.1em;
+  }
+  .preview { display: flex; gap: 1em; align-items: center; }
+  .preview img, .preview canvas { max-width: 160px; max-height: 160px; border-radius: 0.4em; border: 1px solid color-mix(in srgb, var(--fg) 18%, transparent); background: #000; }
+  .stats { font-size: 0.85em; color: var(--muted); }
+  .stats .k { color: var(--accent); }
+
+  .fields { margin-top: 1.2em; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.1em; }
+  .field label { display: block; font-size: 0.78em; color: var(--muted); margin-bottom: 0.45em; letter-spacing: 0.05em; }
+  .seg { display: flex; flex-wrap: wrap; gap: 0.45em; }
+  .seg button {
+    font-family: var(--mono); font-size: 0.85em; color: var(--muted);
+    background: transparent; border: 1px solid color-mix(in srgb, var(--fg) 24%, transparent);
+    border-radius: 0.5em; padding: 0.55em 0.85em; cursor: pointer; min-height: 40px;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .seg button:hover { color: var(--fg); }
+  .seg button.on { color: var(--accent); border-color: var(--accent); }
+  .slider { display: flex; align-items: center; gap: 0.7em; }
+  .slider input[type=range] { flex: 1; accent-color: var(--accent); min-height: 28px; }
+  .slider .val { color: var(--accent); font-size: 0.9em; min-width: 3.4em; text-align: right; }
+
+  .result { margin-top: 1.2em; display: flex; align-items: center; justify-content: space-between; gap: 1em; flex-wrap: wrap; }
+  .outsize { color: var(--muted); font-size: 0.85em; }
+  .outsize .delta.neg { color: var(--accent); }
+  .outsize .delta.pos { color: #e07171; }
+  .download {
+    font-family: var(--mono); font-size: 0.95em; font-weight: 700; color: var(--bg);
+    background: var(--accent); border: none; border-radius: 0.55em;
+    padding: 0.7em 1.3em; cursor: pointer; min-height: 44px;
+    transition: opacity .15s, transform .15s;
+  }
+  .download:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+  .download:disabled { opacity: .4; cursor: default; }
+
+  .meta { margin-top: 1em; font-size: 0.8em; color: var(--muted); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  @media (max-width: 480px) {
+    .preview { flex-direction: column; align-items: flex-start; }
+    .preview img, .preview canvas { max-width: 100%; width: 100%; max-height: 220px; object-fit: contain; }
+  }
+</style>
+</head>
+<body>
+  <div class="aurora"></div>
+  <div class="scanlines"></div>
+  <div class="topbar">
+    <a href="/">detimzhao<span class="dot">.</span></a>
+    <span class="crumb">/</span>
+    <a href="/projects/tools">tools</a>
+    <span class="crumb">/</span>
+    <span class="crumb">jpeg-converter</span>
+  </div>
+  <main>
+    <h1>jpeg-converter</h1>
+    <div class="privacy"><span class="l">⊕</span> files never leave your browser - everything runs locally with the Canvas API</div>
+
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload an image">
+      <div class="big">drop an image here</div>
+      <div class="or">or</div>
+      <button type="button" id="browse">choose a file</button>
+      <input type="file" id="file" accept="image/*" hidden>
+    </div>
+
+    <div class="work" id="work">
+      <div class="panel">
+        <div class="preview">
+          <img id="prev" alt="output preview">
+          <div class="stats">
+            <div>in <span class="k" id="statIn"></span></div>
+            <div>out <span class="k" id="statOut"></span></div>
+            <div>dims <span class="k" id="statDims"></span></div>
+          </div>
+        </div>
+
+        <div class="fields">
+          <div class="field">
+            <label>resize width</label>
+            <div class="seg" id="resizeSeg">
+              <button type="button" data-w="800">800</button>
+              <button type="button" data-w="1200">1200</button>
+              <button type="button" data-w="1920">1920</button>
+              <button type="button" data-w="0" class="on">original</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>scale <span id="scaleVal"></span></label>
+            <div class="slider">
+              <input type="range" id="scale" min="0.1" max="1" step="0.05" value="1">
+            </div>
+          </div>
+          <div class="field">
+            <label>output format</label>
+            <div class="seg" id="fmtSeg">
+              <button type="button" data-f="image/jpeg" class="on">jpeg</button>
+              <button type="button" data-f="image/webp">webp</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>quality <span id="qualVal"></span></label>
+            <div class="slider">
+              <input type="range" id="qual" min="1" max="100" step="1" value="82">
+            </div>
+          </div>
+        </div>
+
+        <div class="result">
+          <div class="outsize"><span id="deltaText"></span></div>
+          <button class="download" id="dl" disabled>download</button>
+        </div>
+        <div class="meta" id="meta"></div>
+      <div class="meta" id="verline"></div>
+    </div>
+  </main>
+<script>
+  // --- share the landing's palette statically (no r/p/s controls) ---
+  (function(){
+    var KEY = 'detimzhao.palette';
+    function apply(p){
+      var s = document.documentElement.style;
+      s.setProperty('--bg', p.bg); s.setProperty('--fg', p.fg); s.setProperty('--accent', p.accent);
+    }
+    // same flash-friendly converter + constrained generator as the landing
+    function hsl2hex(h,s,l){ s/=100; l/=100; var k=function(n){return (n+h/30)%12}, a=s*Math.min(l,1-l), f=function(n){var v=Math.min(k(n)-3,9-k(n)); return l-a*Math.max(-1,Math.min(1,v))}; var to=function(x){return Math.round(x*255).toString(16).padStart(2,'0')}; return '#'+to(f(0))+to(f(8))+to(f(4)); }
+    function gen(){
+      var H = Math.random()*360|0;
+      return { bg:hsl2hex(H,20+Math.random()*20,9+Math.random()*16),
+               fg:hsl2hex(H,8+Math.random()*10,88+Math.random()*7),
+               accent:hsl2hex((H+40+Math.random()*110)%360,58+Math.random()*30,52+Math.random()*15) };
+    }
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(KEY)); } catch(e) {}
+    if (saved && saved.bg) {
+      apply(saved);
+    } else {
+      var p = gen();
+      apply(p);
+      try { localStorage.setItem(KEY, JSON.stringify(p)); } catch(e) {}
+    }
+  })();
+</script>
+
+<script>
+  const VERSION = 'v1.0';   // see VERSIONING.md — single source of truth for the footer label
+  (function(){
+    var $ = function(id){ return document.getElementById(id); };
+    var drop = $('drop'), fileInput = $('file'), work = $('work');
+    var prev = $('prev'), statIn = $('statIn'), statOut = $('statOut'), statDims = $('statDims');
+    var dl = $('dl'), meta = $('meta'), deltaText = $('deltaText');
+
+    var origImg = null;      // loaded HTMLImageElement
+    var origBytes = 0;       // original file byte size
+    var outBlob = null;      // last encoded blob
+    var outURL = null;
+    var curFmt = 'image/jpeg';
+
+    // selected width in px (0 = original) + extra scale factor 0.1-1
+    var selW = 0, scale = 1;
+
+    function fmt(r, precise){
+      return r < 1024 ? (r|0)+' b' : (r/1024).toFixed(precise || r<10240 ? 1 : 0)+' kb';
+    }
+    function showDelta(){
+      if(!origBytes || !outBlob){ deltaText.textContent = ''; return; }
+      var d = outBlob.size - origBytes;
+      var pct = (outBlob.size/origBytes)*100;
+      var cls = d <= 0 ? 'neg' : 'pos';
+      var sign = d <= 0 ? '−' : '+';
+      deltaText.textContent = sign + (d<=0?'':'') + fmt(Math.abs(d)) + '  (' + pct.toFixed(0) + '% of original)' ;
+      deltaText.className = 'delta ' + cls;
+    }
+
+    function loadFile(file){
+      if(!file){ return; }
+      if(!file.type.startsWith('image/')) { meta.textContent = 'please drop an image file'; return; }
+      var url = URL.createObjectURL(file);
+      var im = new Image();
+      im.onload = function(){
+        origImg = im; origBytes = file.size;
+        statIn.textContent = fmt(file.size, true);
+        work.style.display = 'block';
+        meta.textContent = file.name;
+        render();
+      };
+      im.onerror = function(){ meta.textContent = 'could not read that image'; URL.revokeObjectURL(url); };
+      im.src = url;
+    }
+
+    function targetW(){
+      var w = selW === 0 ? origImg.naturalWidth : selW;
+      return Math.max(1, Math.round(w * scale));
+    }
+
+    function render(){
+      if(!origImg) return;
+      var w = targetW();
+      var h = Math.max(1, Math.round(origImg.naturalHeight * (w / origImg.naturalWidth)));
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(origImg, 0, 0, w, h);
+      if(outURL) URL.revokeObjectURL(outURL);
+      var q = $('qual').value / 100;
+      canvas.toBlob(function(b){
+        if(!b) return;
+        outBlob = b;
+        if(outURL) URL.revokeObjectURL(outURL);
+        outURL = URL.createObjectURL(b);
+        prev.src = outURL;
+        statOut.textContent = fmt(b.size, true);
+        statDims.textContent = w + ' × ' + h;
+        dl.disabled = false;
+        showDelta();
+      }, curFmt, q);
+    }
+
+    // --- events ---
+    drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.classList.add('hover'); });
+    drop.addEventListener('dragleave', function(){ drop.classList.remove('hover'); });
+    drop.addEventListener('drop', function(e){
+      e.preventDefault(); drop.classList.remove('hover');
+      if(e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+    });
+    drop.addEventListener('click', function(e){ if(e.target!==fileInput) fileInput.click(); });
+    drop.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); fileInput.click(); } });
+    $('browse').addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); fileInput.click(); });
+    fileInput.addEventListener('change', function(){ if(fileInput.files[0]) loadFile(fileInput.files[0]); });
+
+    $('resizeSeg').addEventListener('click', function(e){
+      var b = e.target.closest('button'); if(!b) return;
+      this.querySelectorAll('button').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      selW = parseInt(b.dataset.w, 10);
+      render();
+    });
+    $('fmtSeg').addEventListener('click', function(e){
+      var b = e.target.closest('button'); if(!b) return;
+      this.querySelectorAll('button').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      curFmt = b.dataset.f;
+      render();
+    });
+    $('scale').addEventListener('input', function(){
+      scale = parseFloat(this.value);
+      $('scaleVal').textContent = (scale*100)|0 + '%';
+      render();
+    });
+    $('qual').addEventListener('input', function(){ $('qualVal').textContent = this.value + '%'; render(); });
+
+    $('dl').addEventListener('click', function(){
+      if(!outBlob) return;
+      var a = document.createElement('a');
+      a.href = outURL;
+      a.download = (meta.textContent || 'image').replace(/\.[a-z0-9]+$/i,'') + (curFmt==='image/jpeg'?'.jpg':'.webp');
+      document.body.appendChild(a); a.click(); a.remove();
+    });
+
+    $('qualVal').textContent = $('qual').value + '%';
+    $('scaleVal').textContent = '100%';
+
+    var vl = document.getElementById('verline');
+    if (vl) vl.textContent = VERSION;   // single source of truth (see VERSIONING.md)
+  })();
+</script>
+</body>
+</html>

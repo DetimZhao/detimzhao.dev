@@ -1,0 +1,32 @@
+# Versioning — Lab Tools (`projects/tools/`)
+
+Single source of truth: the `VERSION` constant in `jpeg-converter.html`
+(the current shipped tool). The footer version label renders that constant —
+never hand-edit the label.
+
+## Scheme: `vMAJOR.MINOR[.PATCH]`
+
+- **MAJOR** — a new generation / design language for the tools section.
+  Changing the layout, chrome, or type system bumps MAJOR and resets MINOR
+  (and PATCH) to `0`.
+  - `v1` = tools index (card grid) + self-contained jpeg-converter
+- **MINOR** — a shipped feature or UX iteration within a generation. Each
+  deploy that adds or changes user-facing behaviour bumps MINOR.
+- **PATCH** (optional, e.g. `v1.2.1`) — bug-fix-only releases.
+
+## Rules
+
+1. Bump the `VERSION` constant only — the footer label renders it automatically.
+2. Tag the deploy commit `v<MAJOR.MINOR>` (annotated):
+   `git tag -a v1.0 -m "tools: jpeg-converter + index"`.
+3. A MAJOR bump resets MINOR/PATCH to `0`.
+4. One bump per shipped change set. Do not bump for uncommitted work-in-progress.
+5. Version describes the *deployed tools section*, independent of the landing /
+   playground versions.
+
+## History
+
+- **v1.0** — tools index (card grid, palette-matched to the landing) +
+  self-contained jpeg-converter (drag-drop / picker, Canvas API, resize
+  presets + scale, JPEG/WebP, quality, size readout, download). Deployed under
+  `projects/tools/`.

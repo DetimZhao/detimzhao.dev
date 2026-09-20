@@ -1,0 +1,4 @@
+# uv venv — machine-local, never track
+.venv/
+__pycache__/
+*.pyc

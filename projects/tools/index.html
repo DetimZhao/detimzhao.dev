@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tools - detimzhao lab</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  @font-face { font-family: 'Commit Mono'; src: url('/fonts/commit-mono-latin-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+  @font-face { font-family: 'Commit Mono'; src: url('/fonts/commit-mono-latin-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    /* defaults — overridden by the shared palette on load (matches landing) */
+    --bg: #0a0a0a; --fg: #eef0ff; --accent: #fff3c4;
+    --muted: color-mix(in srgb, var(--fg) 55%, var(--bg));
+    --mono: "Commit Mono", "JetBrains Mono", ui-monospace, monospace;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--mono);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    position: relative; overflow-x: hidden;
+  }
+  /* ambient generative field - static, matches landing (GPU accel off) */
+  .aurora {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(42% 34% at 22% 26%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 72%),
+      radial-gradient(32% 28% at 80% 20%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 72%),
+      radial-gradient(46% 38% at 66% 80%, color-mix(in srgb, var(--fg) 13%, transparent), transparent 78%),
+      radial-gradient(28% 24% at 28% 84%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 72%);
+  }
+  .scanlines {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0 1px, transparent 1px 3px);
+  }
+  .topbar {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; align-items: baseline; gap: 0.75em;
+    padding: 0.9em clamp(16px, 4vw, 28px);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--fg) 16%, transparent);
+  }
+  .topbar a { color: var(--fg); text-decoration: none; font-weight: 700; }
+  .topbar a:hover { color: var(--accent); }
+  .topbar .crumb { color: var(--muted); font-weight: 400; }
+  .topbar .dot { color: var(--accent); }
+  main { max-width: 720px; margin: 0 auto; padding: clamp(24px, 6vh, 56px) clamp(16px, 4vw, 28px) 64px; position: relative; z-index: 1; }
+  h1 { font-size: clamp(1.6em, 4vw, 2.2em); font-weight: 700; letter-spacing: -0.01em; }
+  .lead { margin-top: 0.6em; color: var(--muted); font-size: 0.92em; }
+  .grid { margin-top: 2em; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1em; }
+  .card {
+    display: block; text-decoration: none; color: var(--fg);
+    border: 1px solid color-mix(in srgb, var(--fg) 18%, transparent);
+    border-radius: 0.6em; padding: 1.1em 1.1em 1.2em;
+    transition: border-color .15s, transform .15s, background .15s;
+    position: relative;
+  }
+  .card:hover, .card:focus-visible { border-color: var(--accent); transform: translateY(-2px); background: color-mix(in srgb, var(--accent) 5%, transparent); }
+  .card .t { display: flex; align-items: baseline; gap: 0.6em; }
+  .card .n { color: var(--muted); font-size: 0.72em; }
+  .card .tt { font-weight: 700; font-size: 1.15em; }
+  .card .tt::after { content: " ↗"; color: var(--accent); opacity: 0; font-size: 0.8em; transition: opacity .15s; }
+  .card:hover .tt::after { opacity: 1; }
+  .card .d { margin-top: 0.5em; color: var(--muted); font-size: 0.85em; }
+  .soon .tt::after { content: ""; }
+  .soon { opacity: .45; cursor: default; pointer-events: none; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+  <div class="aurora"></div>
+  <div class="scanlines"></div>
+  <div class="topbar">
+    <a href="/">detimzhao<span class="dot">.</span></a>
+    <span class="crumb">/</span>
+    <span class="crumb">tools</span>
+  </div>
+  <main>
+    <h1>tools</h1>
+    <div class="lead">a small toolbox - everything runs in your browser, nothing gets uploaded</div>
+    <div class="grid">
+      <a class="card" href="/projects/tools/jpeg-converter.html">
+        <span class="t"><span class="n">01</span><span class="tt">jpeg-converter</span></span>
+        <div class="d">resize and re-encode images - drag a file in, get a lean jpeg or webp out</div>
+      </a>
+      <div class="card soon">
+        <span class="t"><span class="n">02</span><span class="tt">password-generator</span></span>
+        <div class="d">strong random passwords, generated locally</div>
+      </div>
+    </div>
+  </main>
+<script>
+  // --- share the landing's palette statically (no r/p/s controls) ---
+  (function(){
+    var KEY = 'detimzhao.palette';
+    function apply(p){
+      var s = document.documentElement.style;
+      s.setProperty('--bg', p.bg); s.setProperty('--fg', p.fg); s.setProperty('--accent', p.accent);
+    }
+    // same flash-friendly converter + constrained generator as the landing
+    function hsl2hex(h,s,l){ s/=100; l/=100; var k=function(n){return (n+h/30)%12}, a=s*Math.min(l,1-l), f=function(n){var v=Math.min(k(n)-3,9-k(n)); return l-a*Math.max(-1,Math.min(1,v))}; var to=function(x){return Math.round(x*255).toString(16).padStart(2,'0')}; return '#'+to(f(0))+to(f(8))+to(f(4)); }
+    function gen(){
+      var H = Math.random()*360|0;
+      return { bg:hsl2hex(H,20+Math.random()*20,9+Math.random()*16),
+               fg:hsl2hex(H,8+Math.random()*10,88+Math.random()*7),
+               accent:hsl2hex((H+40+Math.random()*110)%360,58+Math.random()*30,52+Math.random()*15) };
+    }
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(KEY)); } catch(e) {}
+    if (saved && saved.bg) {
+      apply(saved);
+    } else {
+      var p = gen();
+      apply(p);
+      try { localStorage.setItem(KEY, JSON.stringify(p)); } catch(e) {}
+    }
+  })();
+</script>
+</body>
+</html>
