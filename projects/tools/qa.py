@@ -102,8 +102,12 @@ def main():
         }""")
         check("converter loads, palette applied", r['bg'] not in ("#0a0a0a","",), r)
         check("aurora present", r['hasAurora'], r)
+        # privacy line icon: Material Symbols lock, not a unicode glyph
+        lr = page_eval(page, """() => { const el=document.querySelector('.privacy .l'); return el?{cls:el.className, aria:el.getAttribute('aria-hidden')}:null; }""")
+        check("privacy icon is Material Symbols (not ⊕/glyph)",
+              lr is not None and 'material-symbols-outlined' in (lr['cls'] or '') and lr['aria'] == 'true', lr)
         check("download disabled before upload", r['dlDisabled'] is True, r)
-        check("version const renders v1.0", r['ver'] == 'v1.0', r)
+        check("version const renders v1.0.1", r['ver'] == 'v1.0.1', r)
 
         # make a real test image (2560x1440 PNG) via pure-stdlib writer (no PIL dep)
         import base64, struct, zlib

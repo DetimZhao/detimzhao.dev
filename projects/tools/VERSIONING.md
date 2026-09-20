@@ -30,3 +30,6 @@ never hand-edit the label.
   self-contained jpeg-converter (drag-drop / picker, Canvas API, resize
   presets + scale, JPEG/WebP, quality, size readout, download). Deployed under
   `projects/tools/`.
+- **v1.0.1** — privacy line icon: unicode `⊕` → Material Symbols `lock`
+  (palette-accent), loaded via Google Fonts `icon_names=lock` (matches the
+  landing's `follow_the_signs` icon convention). QA harness tracks it.
