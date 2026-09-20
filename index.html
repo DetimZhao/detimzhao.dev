@@ -136,7 +136,7 @@
         <a class="p" href="/projects/playground">
           <span class="phead"><span class="idx">01</span><span class="pt">playground</span></span>
           <div class="pd">semantic vector arithmetic on a 3D point cloud - formulas become space</div>
-          <div class="pmore">type `king - man + woman` and see where it lands - ~3k AI/ML concepts, frozen. click a point to inspect its neighbors.</div>
+          <div class="pmore">type `transformer - attention + diffusion` and watch it land in the cloud. click a point to see its neighbors.</div>
         </a>
         <div class="p soon">
           <span class="phead"><span class="idx">02</span><span class="pt">tools</span></span>
@@ -162,6 +162,7 @@
         </span>
       </div>
     </div>
+    <div id="pin-toast" style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:0.84em;color:var(--accent);opacity:0;transition:opacity .3s;pointer-events:none;z-index:10;">✓ pinned</div>
   </main>
 <script>
     // --- random accessible palette: fresh on arrival, [s] pins, [r] rerolls, [p] prev ---
@@ -189,7 +190,7 @@
       setPal({bg,fg,accent,pinned:false});
     };
     const prev = () => { const s = hist.pop(); if (s) setPal({ ...s, pinned:false }); };
-    const pin = () => setPal({...cur, pinned:true});
+    const pin = () => { setPal({...cur, pinned:true}); const t = document.getElementById('pin-toast'); if(t){ t.style.opacity='1'; setTimeout(()=>t.style.opacity='0', 800); } };
     const act = a => { if (a === 'reroll' || a === 'r') reroll(); else if (a === 'prev' || a === 'p') prev(); else if (a === 'pin' || a === 's') pin(); };
     window.addEventListener('keydown', e => {
       if ((e.key === 'r' || e.key === 'p' || e.key === 's') && !e.metaKey && !e.ctrlKey && !e.altKey) {
