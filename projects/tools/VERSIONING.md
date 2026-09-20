@@ -33,3 +33,7 @@ never hand-edit the label.
 - **v1.0.1** — privacy line icon: unicode `⊕` → Material Symbols `lock`
   (palette-accent), loaded via Google Fonts `icon_names=lock` (matches the
   landing's `follow_the_signs` icon convention). QA harness tracks it.
+- **v1.0.2** — UX policy: privacy promise is lab-level (already on the landing),
+  so the converter's redundant privacy line is removed entirely (text + icon +
+  the now-unused Material Symbols font link). Landing pin toast reads
+  `✓ pinned theme` for clarity (footer hint stays `[ s ] pin`).
