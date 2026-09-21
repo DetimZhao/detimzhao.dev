@@ -273,7 +273,7 @@ def main():
         check("password generator generates a password", L >= 8, pwg)
         check("generated length matches slider", str(L) == str(pwg.get("len")), pwg)
         check("palette applied (not black)", pwg.get("bg") not in ("#0a0a0a", ""), pwg)
-        check("version const renders v2.0", pwg.get("ver") == "v2.0", pwg)
+        check("version const renders v2.1", pwg.get("ver") == "v2.1", pwg)
         # actions live OUTSIDE the password box (1Password layout)
         box_actions = page_eval(page, """() => {
           const hero=document.querySelector('.hero'), ab=document.querySelector('.actionbar');
@@ -284,6 +284,13 @@ def main():
         check("copy/regenerate live outside the password box",
               box_actions.get("copyInBox") is False and box_actions.get("copyInBar") is True
               and box_actions.get("pwInBox") is True, box_actions)
+        # 1Password flow: controls on top, output region below (configure -> review -> act)
+        flow = page_eval(page, """() => {
+          const p=document.querySelector('.panel').getBoundingClientRect().top;
+          const o=document.querySelector('.outzone').getBoundingClientRect().top;
+          return {panelTop:p, outzoneTop:o};
+        }""")
+        check("1Password flow: controls above output", flow.get("panelTop") < flow.get("outzoneTop"), flow)
         # two-voice type on password-gen: field caption = DM Sans, password/toggles = mono
         tvpw = page_eval(page, """() => {
           const ff=el=>el?getComputedStyle(el).fontFamily:'';

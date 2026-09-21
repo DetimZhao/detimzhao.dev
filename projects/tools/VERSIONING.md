@@ -60,3 +60,8 @@ never hand-edit the label.
   generates a numeric code (digits only, 4–12 length, default 4), hides the
   char-class options, and sizes the length slider to the numeric range. Bump:
   MINOR (new PIN feature + layout).
+- **v2.1 (password-generator)** — matched 1Password's **flow direction**:
+  controls (password type → length → characters) now sit at the top, and the
+  output region (strength meter + password box + copy/regenerate) fills below,
+  so you configure first, then review and act on the result where your eye is.
+  Bump: MINOR (layout/flow iteration).
