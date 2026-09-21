@@ -85,8 +85,6 @@
   .head { display: flex; align-items: baseline; gap: 0.6em; }
   .n { color: var(--muted); font-size: 0.72em; flex: none; }
   .tt { font-weight: 700; font-size: 1.12em; }
-  .ar { margin-left: auto; color: var(--accent); font-size: 0.95em; opacity: 0; transition: opacity .15s; }
-  .card:hover .ar, .card:focus-visible .ar { opacity: 1; }
   .d { margin-top: 0.55em; color: var(--muted); font-size: 0.82em; font-family: var(--prose); line-height: 1.45; }
 
   /* star toggle — top-right of each card, appears on hover/focus; filled accent3 when starred */
@@ -108,7 +106,6 @@
   .starredrow .card .n { visibility: hidden; } /* shelf drops the category-index number */
 
   .soon { opacity: .5; }
-  .soon .ar { opacity: 0; }
   .soon .starbtn { display: none; } /* can't star a not-yet-built tool */
   a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -134,39 +131,39 @@
 
     <div class="run"><div class="cat"><b>conv</b><span class="ln"></span></div>
       <div class="grid">
-        <a class="card soon" data-k="json-prettify"><button class="starbtn" aria-label="star json-prettify"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">01</span><span class="tt">json-prettify</span><span class="ar">↗</span></span><div class="d">format and minify json</div></a>
-        <a class="card soon" data-k="yaml-vs-json"><button class="starbtn" aria-label="star yaml-vs-json"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">02</span><span class="tt">yaml-vs-json</span><span class="ar">↗</span></span><div class="d">convert between yaml and json config</div></a>
-        <a class="card" href="/projects/tools/jpeg-converter.html" data-k="jpeg-converter"><button class="starbtn" aria-label="star jpeg-converter"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">03</span><span class="tt">jpeg-converter</span><span class="ar">↗</span></span><div class="d">resize and re-encode images locally</div></a>
-        <a class="card soon" data-k="case-converter"><button class="starbtn" aria-label="star case-converter"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">04</span><span class="tt">case-converter</span><span class="ar">↗</span></span><div class="d">camel, snake, kebab, pascal</div></a>
-        <a class="card soon" data-k="url-encoder"><button class="starbtn" aria-label="star url-encoder"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">05</span><span class="tt">url-encoder</span><span class="ar">↗</span></span><div class="d">encode and decode url parts</div></a>
-        <a class="card soon" data-k="html-entities"><button class="starbtn" aria-label="star html-entities"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">06</span><span class="tt">html-entities</span><span class="ar">↗</span></span><div class="d">encode and decode html entities</div></a>
+        <a class="card soon" data-k="json-prettify"><button class="starbtn" aria-label="star json-prettify"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">01</span><span class="tt">json-prettify</span></span><div class="d">format and minify json</div></a>
+        <a class="card soon" data-k="yaml-vs-json"><button class="starbtn" aria-label="star yaml-vs-json"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">02</span><span class="tt">yaml-vs-json</span></span><div class="d">convert between yaml and json config</div></a>
+        <a class="card" href="/projects/tools/jpeg-converter.html" data-k="jpeg-converter"><button class="starbtn" aria-label="star jpeg-converter"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">03</span><span class="tt">jpeg-converter</span></span><div class="d">resize and re-encode images locally</div></a>
+        <a class="card soon" data-k="case-converter"><button class="starbtn" aria-label="star case-converter"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">04</span><span class="tt">case-converter</span></span><div class="d">camel, snake, kebab, pascal</div></a>
+        <a class="card soon" data-k="url-encoder"><button class="starbtn" aria-label="star url-encoder"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">05</span><span class="tt">url-encoder</span></span><div class="d">encode and decode url parts</div></a>
+        <a class="card soon" data-k="html-entities"><button class="starbtn" aria-label="star html-entities"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">06</span><span class="tt">html-entities</span></span><div class="d">encode and decode html entities</div></a>
       </div>
     </div>
 
     <div class="run"><div class="cat"><b>gen</b><span class="ln"></span></div>
       <div class="grid">
-        <a class="card" href="/projects/tools/password-generator.html" data-k="password-generator"><button class="starbtn" aria-label="star password-generator"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">07</span><span class="tt">password-generator</span><span class="ar">↗</span></span><div class="d">strong random passwords or pins, generated locally</div></a>
-        <a class="card soon" data-k="random-port"><button class="starbtn" aria-label="star random-port"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">08</span><span class="tt">random-port</span><span class="ar">↗</span></span><div class="d">one-button crypto-random port</div></a>
-        <a class="card soon" data-k="uuid-generator"><button class="starbtn" aria-label="star uuid-generator"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">09</span><span class="tt">uuid-generator</span><span class="ar">↗</span></span><div class="d">bulk uuids via crypto.randomUUID</div></a>
-        <a class="card soon" data-k="token-generator"><button class="starbtn" aria-label="star token-generator"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">10</span><span class="tt">token-generator</span><span class="ar">↗</span></span><div class="d">random base64 hex tokens</div></a>
-        <a class="card soon" data-k="crontab-generator"><button class="starbtn" aria-label="star crontab-generator"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">11</span><span class="tt">crontab-generator</span><span class="ar">↗</span></span><div class="d">build cron expressions visually</div></a>
-        <a class="card soon" data-k="lorem-ipsum"><button class="starbtn" aria-label="star lorem-ipsum"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">12</span><span class="tt">lorem-ipsum</span><span class="ar">↗</span></span><div class="d">placeholder filler text</div></a>
+        <a class="card" href="/projects/tools/password-generator.html" data-k="password-generator"><button class="starbtn" aria-label="star password-generator"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">07</span><span class="tt">password-generator</span></span><div class="d">strong random passwords or pins, generated locally</div></a>
+        <a class="card soon" data-k="random-port"><button class="starbtn" aria-label="star random-port"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">08</span><span class="tt">random-port</span></span><div class="d">one-button crypto-random port</div></a>
+        <a class="card soon" data-k="uuid-generator"><button class="starbtn" aria-label="star uuid-generator"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">09</span><span class="tt">uuid-generator</span></span><div class="d">bulk uuids via crypto.randomUUID</div></a>
+        <a class="card soon" data-k="token-generator"><button class="starbtn" aria-label="star token-generator"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">10</span><span class="tt">token-generator</span></span><div class="d">random base64 hex tokens</div></a>
+        <a class="card soon" data-k="crontab-generator"><button class="starbtn" aria-label="star crontab-generator"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">11</span><span class="tt">crontab-generator</span></span><div class="d">build cron expressions visually</div></a>
+        <a class="card soon" data-k="lorem-ipsum"><button class="starbtn" aria-label="star lorem-ipsum"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">12</span><span class="tt">lorem-ipsum</span></span><div class="d">placeholder filler text</div></a>
       </div>
     </div>
 
     <div class="run"><div class="cat"><b>enc</b><span class="ln"></span></div>
       <div class="grid">
-        <a class="card soon" data-k="hash-text"><button class="starbtn" aria-label="star hash-text"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">13</span><span class="tt">hash-text</span><span class="ar">↗</span></span><div class="d">sha-256 512 via crypto.subtle</div></a>
-        <a class="card soon" data-k="base64-string"><button class="starbtn" aria-label="star base64-string"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">14</span><span class="tt">base64-string</span><span class="ar">↗</span></span><div class="d">encode and decode base64</div></a>
+        <a class="card soon" data-k="hash-text"><button class="starbtn" aria-label="star hash-text"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">13</span><span class="tt">hash-text</span></span><div class="d">sha-256 512 via crypto.subtle</div></a>
+        <a class="card soon" data-k="base64-string"><button class="starbtn" aria-label="star base64-string"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">14</span><span class="tt">base64-string</span></span><div class="d">encode and decode base64</div></a>
       </div>
     </div>
 
     <div class="run"><div class="cat"><b>net / ref / tst</b><span class="ln"></span></div>
       <div class="grid">
-        <a class="card soon" data-k="ipv4-subnet"><button class="starbtn" aria-label="star ipv4-subnet"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">15</span><span class="tt">ipv4-subnet</span><span class="ar">↗</span></span><div class="d">cidr math and subnet lookup</div></a>
-        <a class="card soon" data-k="regex-tester"><button class="starbtn" aria-label="star regex-tester"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">16</span><span class="tt">regex-tester</span><span class="ar">↗</span></span><div class="d">flags and match highlighting</div></a>
-        <a class="card soon" data-k="json-diff"><button class="starbtn" aria-label="star json-diff"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">17</span><span class="tt">json-diff</span><span class="ar">↗</span></span><div class="d">side-by-side json compare</div></a>
-        <a class="card soon" data-k="text-statistics"><button class="starbtn" aria-label="star text-statistics"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">18</span><span class="tt">text-statistics</span><span class="ar">↗</span></span><div class="d">chars, words, lines count</div></a>
+        <a class="card soon" data-k="ipv4-subnet"><button class="starbtn" aria-label="star ipv4-subnet"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">15</span><span class="tt">ipv4-subnet</span></span><div class="d">cidr math and subnet lookup</div></a>
+        <a class="card soon" data-k="regex-tester"><button class="starbtn" aria-label="star regex-tester"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">16</span><span class="tt">regex-tester</span></span><div class="d">flags and match highlighting</div></a>
+        <a class="card soon" data-k="json-diff"><button class="starbtn" aria-label="star json-diff"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">17</span><span class="tt">json-diff</span></span><div class="d">side-by-side json compare</div></a>
+        <a class="card soon" data-k="text-statistics"><button class="starbtn" aria-label="star text-statistics"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">18</span><span class="tt">text-statistics</span></span><div class="d">chars, words, lines count</div></a>
       </div>
     </div>
   </main>
