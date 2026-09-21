@@ -74,3 +74,15 @@ never hand-edit the label.
   (desktop) / always visible on touch. **Centered** controls + action bar
   (kills the edge-hugging negative space). Rounded edges up. Bump: MINOR
   (UX + feature detail).
+- **v3.0 (password-generator)** — full 1Password-faithful rework:
+  - **Three distinct colours**: page `--accent` stays for UI; digits derive
+    `--accent2`, symbols derive `--accent3` (hue-rotated at palette-apply —
+    theme-proof, no hardcoded theme set).
+  - **Real switch toggles** (pure CSS pill + knob) for all 4 char classes.
+  - **password / PIN as a tab rail** with Material icons (`key`, `pin`).
+  - **Copy + Regenerate** full-width stacked buttons (icons `content_copy`,
+    `refresh`); copy label trimmed to "copy".
+  - **Square password box** (border-radius 0) for contrast vs rounded controls.
+  - **Length number input centered** (native spinners hidden) right of slider.
+  - **Strength meter below** the password box.
+  Bump: MAJOR (design-language rework).

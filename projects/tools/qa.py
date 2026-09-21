@@ -264,7 +264,7 @@ def main():
           const pw='p'; const el=document.getElementById('pw');
           const get=(s)=>document.querySelector(s);
           return {pw:el?el.textContent:'', len:get('#len')?get('#len').value:null,
-            pools:[...document.querySelectorAll('.toggle.on')].map(t=>t.dataset.pool),
+            pools:[...document.querySelectorAll('.crow.on')].map(t=>t.dataset.pool),
             str:get('#strLabel')?get('#strLabel').textContent:'',
             ver:get('#verline')?get('#verline').textContent:'',
             bg:getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()};
@@ -273,87 +273,102 @@ def main():
         check("password generator generates a password", L >= 8, pwg)
         check("generated length matches slider", str(L) == str(pwg.get("len")), pwg)
         check("palette applied (not black)", pwg.get("bg") not in ("#0a0a0a", ""), pwg)
-        check("version const renders v2.2", pwg.get("ver") == "v2.2", pwg)
-        # actions live OUTSIDE the password box (1Password layout)
+        check("version const renders v3.0", pwg.get("ver") == "v3.0", pwg)
+        # copy/regenerate are full-width stacked buttons, NOT inside the password box
         box_actions = page_eval(page, """() => {
-          const hero=document.querySelector('.hero'), ab=document.querySelector('.actionbar');
+          const hero=document.querySelector('.hero'), ac=document.querySelector('.actions');
           return {copyInBox: hero.contains(document.getElementById('copy')),
-                  copyInBar: ab && ab.contains(document.getElementById('copy')),
-                  pwInBox: hero.contains(document.getElementById('pw'))};
+                  copyInActions: ac && ac.contains(document.getElementById('copy')),
+                  pwInBox: hero.contains(document.getElementById('pw')),
+                  stacked:getComputedStyle(ac).flexDirection==='column',
+                  copyW:document.getElementById('copy').getBoundingClientRect().width,
+                  actionsW:ac.getBoundingClientRect().width};
         }""")
-        check("copy/regenerate live outside the password box",
-              box_actions.get("copyInBox") is False and box_actions.get("copyInBar") is True
-              and box_actions.get("pwInBox") is True, box_actions)
-        # 1Password flow: controls on top, output region below (configure -> review -> act)
-        flow = page_eval(page, """() => {
-          const p=document.querySelector('.panel').getBoundingClientRect().top;
-          const o=document.querySelector('.outzone').getBoundingClientRect().top;
-          return {panelTop:p, outzoneTop:o};
+        check("copy/regenerate outside box, stacked",
+              box_actions.get("copyInBox") is False and box_actions.get("copyInActions") is True
+              and box_actions.get("pwInBox") is True and box_actions.get("stacked") is True, box_actions)
+        check("copy/regenerate fill row width",
+              box_actions.get("copyW") and box_actions.get("actionsW")
+              and abs(box_actions.get("copyW") - box_actions.get("actionsW")) < 2, box_actions)
+        # tabs (password/pin) carry icons
+        tabs = page_eval(page, """() => {
+          const tabs=[...document.querySelectorAll('#typeSeg [role=tab]')];
+          const label=function(t){ const c=t.cloneNode(true); const ti=c.querySelector('.ti'); if(ti) c.removeChild(ti); return c.textContent.trim(); };
+          return {labels:tabs.map(label), active:tabs.find(t=>t.classList.contains('on')).dataset.type,
+                  haveIcons:tabs.every(t=>!!t.querySelector('.ti'))};
         }""")
-        check("1Password flow: controls above output", flow.get("panelTop") < flow.get("outzoneTop"), flow)
-        # two-voice type on password-gen: field caption = DM Sans, password/toggles = mono
-        tvpw = page_eval(page, """() => {
-          const ff=el=>el?getComputedStyle(el).fontFamily:'';
-          return {fieldLbl:ff(document.querySelector('.field label')),
-                  pw:ff(document.getElementById('pw')),
-                  toggle:ff(document.querySelector('.toggle'))};
+        check("tabs password/pin with icons", tabs.get("labels") == ["password","pin"] and tabs.get("active") == "password" and tabs.get("haveIcons") is True, tabs)
+        # real switch toggles for all 4 char classes
+        sw = page_eval(page, """() => {
+          const cs=[...document.querySelectorAll('.crow')];
+          return {count:cs.length, haveSwitch:cs.every(c=>!!c.querySelector('.sw')),
+                  pill:getComputedStyle(document.querySelector('.sw')).borderRadius};
         }""")
-        check("password-gen two-voice: caption DM Sans / pw mono",
-              'DM Sans' in (tvpw.get('fieldLbl') or '') and 'Mono' in (tvpw.get('pw') or '')
-              and 'Mono' in (tvpw.get('toggle') or ''), tvpw)
-        # all 4 classes by default; every class represented
-        pools_default = set(pwg.get("pools") or [])
-        check("all 4 char classes on by default", pools_default == {"upper","lower","digit","sym"}, pwg)
+        check("4 char classes as switch toggles", sw.get("count") == 4 and sw.get("haveSwitch") is True and sw.get("pill") != "0px", sw)
+        check("all 4 char classes on by default", set(pwg.get("pools") or []) == {"upper","lower","digit","sym"}, pwg)
         has = {k: bool(re.search(p, pwg.get("pw") or "")) for k, p in
                [("upper","[A-Z]"),("lower","[a-z]"),("digit","[0-9]"),("sym","[^A-Za-z0-9]")]}
         check("generated pw has each selected class", all(has.values()), has)
         check("default strength strong", pwg.get("str") == "strong", pwg)
-        # accent coloring: digits + symbols are colored via .acc spans (1Password touch)
-        acc = page_eval(page, """() => {
-          const pw=document.getElementById('pw');
-          return {accText:[...pw.querySelectorAll('.acc')].map(e=>e.textContent).join(''),
-                  accColor:getComputedStyle(pw.querySelector('.acc')||pw).color,
-                  pwColor:getComputedStyle(pw).color,
-                  lenInput:document.getElementById('lenInput').value,
-                  hasCopyIcon:!!document.getElementById('copyIcon'),
-                  actionsCentered:getComputedStyle(document.querySelector('.actionbar')).justifyContent};
+        # 3-colour scheme: page accent vs digit accent2 vs symbol accent3, all distinct
+        cols = page_eval(page, """() => {
+          const pw=document.getElementById('pw'), cs=getComputedStyle(document.documentElement);
+          const acc=[...pw.querySelectorAll('.acc')], acc2=[...pw.querySelectorAll('.acc2')];
+          return {accent:cs.getPropertyValue('--accent').trim(),
+                  accent2:cs.getPropertyValue('--accent2').trim(),
+                  accent3:cs.getPropertyValue('--accent3').trim(),
+                  digitCol:getComputedStyle(acc[0]||pw).color, symbolCol:getComputedStyle(acc2[0]||pw).color,
+                  hasDigits:[...acc].map(e=>e.textContent).join(''), hasSymbols:[...acc2].map(e=>e.textContent).join('')};
         }""")
-        check("digits+symbols accented, letters plain",
-              bool(re.search(r"[0-9]", acc.get("accText") or "")) and bool(re.search(r"[^A-Za-z0-9]", acc.get("accText") or ""))
-              and acc.get("accColor") != acc.get("pwColor"), acc)
-        check("length is a typeable number input", acc.get("lenInput") == "20", acc)
-        check("copy icon present in box", acc.get("hasCopyIcon") is True, acc)
-        check("action bar centered", acc.get("actionsCentered") == "center", acc)
-        # typed length syncs back to the slider
+        three_distinct = cols.get("accent") != cols.get("accent2") != cols.get("accent3") \
+                         and len({cols.get("accent"), cols.get("accent2"), cols.get("accent3")}) == 3
+        check("3 distinct colors (accent/digits/symbols)",
+              three_distinct and re.search(r"[0-9]", cols.get("hasDigits") or "") is not None
+              and re.search(r"[^A-Za-z0-9]", cols.get("hasSymbols") or "") is not None, cols)
+        # strength meter sits BELOW the password box, hidden in PIN
+        order = page_eval(page, """() => {
+          const kids=[...document.querySelector('main').children].map(c=>(c.className||'')+'|'+(c.id||''));
+          const heroIx=kids.findIndex(k=>k.includes('hero')), strIx=kids.findIndex(k=>k.includes('strengthField'));
+          return heroIx>=0 && strIx>=0 ? heroIx < strIx : null;
+        }""")
+        check("strength meter below password box", order is True, order)
+        # number input is a typeable, centered field right of the slider
+        lens = page_eval(page, """() => {
+          const sl=document.querySelector('.lenslider'), num=document.getElementById('lenInput');
+          const slr=sl.querySelector('input[type=range]').getBoundingClientRect(), nr=num.getBoundingClientRect();
+          return {numRight:nr.left>=slr.right, centered:getComputedStyle(num).textAlign==='center'};
+        }""")
+        check("length input centered + right of slider", lens.get("numRight") is True and lens.get("centered") is True, lens)
+        # typed length syncs to slider
         page_eval(page, """() => { const li=document.getElementById('lenInput'); li.value=35; li.dispatchEvent(new Event('input')); }""")
         page.wait_for_timeout(150)
         len_after = page_eval(page, "document.getElementById('len').value")
         check("typed length syncs slider (35)", len_after == "35", len_after)
-        # toggling off a class removes its chars + drops strength
-        page_eval(page, """() => [...document.querySelectorAll('.toggle')].find(t=>t.dataset.pool==='sym').click()""")
+        # toggling off symbols removes symbol chars
+        page_eval(page, """() => [...document.querySelectorAll('.crow')].find(t=>t.dataset.pool==='sym').click()""")
         page.wait_for_timeout(150)
         pw_nosym = page_eval(page, "document.getElementById('pw').textContent")
         check("turning off symbols removes symbol chars", not re.search(r"[^A-Za-z0-9]", pw_nosym or ""), pw_nosym)
-        # last-class guard: reduces classes down to 1, then the final one can't be unchecked
-        page_eval(page, """() => { document.querySelectorAll('.toggle').forEach(t => { if(!t.classList.contains('on')) t.click(); }); }""")
+        # last-class guard (switch toggles)
+        page_eval(page, """() => { document.querySelectorAll('.crow').forEach(c => { if(!c.classList.contains('on')) c.click(); }); }""")
         page.wait_for_timeout(150)
         while True:
-            n = page_eval(page, "([...document.querySelectorAll('.toggle.on')].length)")
+            n = page_eval(page, "([...document.querySelectorAll('.crow.on')].length)")
             if n and n <= 1:
                 break
-            page_eval(page, """() => { document.querySelector('.toggle.on').click(); }""")
+            page_eval(page, """() => { document.querySelector('.crow.on').click(); }""")
             page.wait_for_timeout(80)
-        page_eval(page, """() => { [...document.querySelectorAll('.toggle.on')][0].click(); }""")
+        page_eval(page, """() => { [...document.querySelectorAll('.crow.on')][0].click(); }""")
         page.wait_for_timeout(100)
-        last_left = page_eval(page, "([...document.querySelectorAll('.toggle.on')].length)")
+        last_left = page_eval(page, "([...document.querySelectorAll('.crow.on')].length)")
         check("last char class cannot be unchecked", last_left == 1, {"left": last_left})
-        # PIN mode: digits only, classes hidden, own range
-        page_eval(page, """() => { document.querySelector('#typeSeg button[data-type="pin"]').click(); }""")
+        # PIN mode: digits only, hidden classes+strength, own range
+        page_eval(page, """() => { document.querySelector('#typeSeg [role=tab][data-type="pin"]').click(); }""")
         page.wait_for_timeout(200)
         pint = page_eval(page, """() => {
           const q=s=>document.querySelector(s);
           return {pw:q('#pw').textContent, classesHidden:q('#classesField').style.display==='none',
-            modeOn:[...q('#typeSeg').querySelectorAll('.on')].map(b=>b.dataset.type),
+            modeOn:[...q('#typeSeg').querySelectorAll('[role=tab].on')].map(b=>b.dataset.type),
             lenMin:q('#len').min, lenMax:q('#len').max,
             strengthHidden:q('#strengthField').style.display==='none'};
         }""")
