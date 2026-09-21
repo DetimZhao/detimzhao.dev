@@ -9,3 +9,6 @@ test-*.png
 
 # local-only tooling config (opencode CLI)
 opencode.json
+
+# local design/scoping notes (kept on disk, not tracked — dev-only)
+projects/tools/matrix-outline.md
