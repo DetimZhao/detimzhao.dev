@@ -42,3 +42,8 @@ never hand-edit the label.
   is larger/more tappable (matches client-side tools like Google Squoosh). The
   prompt retires once a file loads (`main.has-file`), and the working panel
   takes the full stage. Bump: MINOR (UX/layout iteration).
+- **v1.0** (password-generator) — second tool: crypto-random password generator.
+  Length slider 8–128 (default 20), char-class toggles (uppercase/lowercase/
+  digits/symbols, all on, last-class guard), entropy-based strength meter
+  (weak/fair/strong), copy to clipboard + copy-on-click, regenerate. Deployed
+  under `projects/tools/`. Card added to the tools index.

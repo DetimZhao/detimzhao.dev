@@ -74,9 +74,9 @@ def main():
             title:document.title};
         }""")
         check("index loads with title", r["title"] == "tools - detimzhao lab", r)
-        check("1 active + 1 dimmed card", r["cardCount"] == 2 and r["activeCount"] == 1 and r["soonCount"] == 1, r)
-        check("active card is jpeg-converter -> .../jpeg-converter.html",
-              r["activeTitle"] == "jpeg-converter" and r["activeHref"].endswith("jpeg-converter.html"), r)
+        check("2 active cards, none dimmed", r["cardCount"] == 2 and r["activeCount"] == 2 and r["soonCount"] == 0, r)
+        check("active cards link to both tools",
+              r["activeHref"].endswith("jpeg-converter.html"), r)
         check("index not black (palette applied)", r["bg"] not in ("#0a0a0a","",), r)
         check("aurora + scanlines present", r["hasAurora"] and r["hasScan"], r)
         check("no horizontal overflow (desktop)", not r["over"], r)
@@ -236,6 +236,52 @@ def main():
         meta = page_eval(page, "document.querySelector('#meta').textContent")
         check("non-image shows rejection note", "please drop an image file" in (meta or ""), meta)
 
+        print("\n=== PASSWORD GENERATOR ===")
+        page.goto(f"{BASE}/projects/tools/password-generator.html", wait_until="load")
+        page.wait_for_timeout(400)
+        pwg = page_eval(page, """() => {
+          const pw='p'; const el=document.getElementById('pw');
+          const get=(s)=>document.querySelector(s);
+          return {pw:el?el.textContent:'', len:get('#len')?get('#len').value:null,
+            pools:[...document.querySelectorAll('.toggle.on')].map(t=>t.dataset.pool),
+            str:get('#strLabel')?get('#strLabel').textContent:'',
+            ver:get('#verline')?get('#verline').textContent:'',
+            bg:getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()};
+        }""")
+        L = len(pwg.get("pw") or "")
+        check("password generator generates a password", L >= 8, pwg)
+        check("generated length matches slider", str(L) == str(pwg.get("len")), pwg)
+        check("palette applied (not black)", pwg.get("bg") not in ("#0a0a0a", ""), pwg)
+        check("version const renders v1.0", pwg.get("ver") == "v1.0", pwg)
+        # all 4 classes by default; every class represented
+        pools_default = set(pwg.get("pools") or [])
+        check("all 4 char classes on by default", pools_default == {"upper","lower","digit","sym"}, pwg)
+        has = {k: bool(re.search(p, pwg.get("pw") or "")) for k, p in
+               [("upper","[A-Z]"),("lower","[a-z]"),("digit","[0-9]"),("sym","[^A-Za-z0-9]")]}
+        check("generated pw has each selected class", all(has.values()), has)
+        check("default strength strong", pwg.get("str") == "strong", pwg)
+        # toggling off a class removes its chars + drops strength
+        page_eval(page, """() => [...document.querySelectorAll('.toggle')].find(t=>t.dataset.pool==='sym').click()""")
+        page.wait_for_timeout(150)
+        pw_nosym = page_eval(page, "document.getElementById('pw').textContent")
+        check("turning off symbols removes symbol chars", not re.search(r"[^A-Za-z0-9]", pw_nosym or ""), pw_nosym)
+        # last-class guard: reduces classes down to 1, then the final one can't be unchecked
+        page_eval(page, """() => { document.querySelectorAll('.toggle').forEach(t => { if(!t.classList.contains('on')) t.click(); }); }""")
+        page.wait_for_timeout(150)
+        while True:
+            n = page_eval(page, "([...document.querySelectorAll('.toggle.on')].length)")
+            if n and n <= 1:
+                break
+            page_eval(page, """() => { document.querySelector('.toggle.on').click(); }""")
+            page.wait_for_timeout(80)
+        page_eval(page, """() => { [...document.querySelectorAll('.toggle.on')][0].click(); }""")
+        page.wait_for_timeout(100)
+        last_left = page_eval(page, "([...document.querySelectorAll('.toggle.on')].length)")
+        check("last char class cannot be unchecked", last_left == 1, {"left": last_left})
+        # revert classes for integration consistency
+        page.goto(f"{BASE}/projects/tools/index.html", wait_until="load")
+        page.wait_for_timeout(300)
+
         print("\n=== INTEGRATION: click-through ===")
         page.goto(f"{BASE}/", wait_until="load")
         page.wait_for_timeout(500)
@@ -253,6 +299,11 @@ def main():
         page.click(".topbar a[href='/projects/tools']")
         page.wait_for_timeout(500)
         check("converter breadcrumb -> tools index", "projects/tools/" in page.url, page.url)
+        page.click("a.card[href*='password-generator.html']")
+        page.wait_for_timeout(600)
+        check("tools index -> password-generator", "password-generator" in page.url, page.url)
+        page.click(".topbar a[href='/projects/tools']")
+        page.wait_for_timeout(500)
         page.click(".topbar a[href='/']")
         page.wait_for_timeout(500)
         check("tools breadcrumb -> landing", page.url.rstrip("/").endswith(BASE.rstrip("/").split("://")[1] or "/") or page.title() == "detimzhao - lab", page.url)
