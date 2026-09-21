@@ -74,9 +74,65 @@ def main():
             title:document.title};
         }""")
         check("index loads with title", r["title"] == "tools - detimzhao lab", r)
-        check("2 active cards, none dimmed", r["cardCount"] == 2 and r["activeCount"] == 2 and r["soonCount"] == 0, r)
+        check("matrix: 18 cards = 2 active + 16 soon",
+              r["cardCount"] == 18 and r["activeCount"] == 2 and r["soonCount"] == 16, r)
         check("active cards link to both tools",
               r["activeHref"].endswith("jpeg-converter.html"), r)
+        # both built tools are active links; second active is password-generator
+        act = page_eval(page, """() => [...document.querySelectorAll('.card:not(.soon)')].map(c=>c.getAttribute('href'))""")
+        check("2 active links to jpeg + password-gen",
+              len(act) == 2 and any("jpeg-converter.html" in (a or "") for a in act)
+              and any("password-generator.html" in (a or "") for a in act), act)
+        # V11b category headers: 4 accent2 words + 4 faded divider lines, no // comment
+        cats = page_eval(page, """() => ({
+          words:[...document.querySelectorAll('.cat b')].map(b=>b.textContent.trim()),
+          ln:document.querySelectorAll('.cat .ln').length,
+          accents:[...document.querySelectorAll('.cat b')].map(b=>({w:b.textContent.trim(),c:getComputedStyle(b).color})),
+          acc:getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim(),
+          acc3:getComputedStyle(document.documentElement).getPropertyValue('--accent3').trim()
+        })""")
+        # 5 runs = starred shelf + 4 categories; category words != starred
+        catWords = [w for w in cats["words"] if w != "starred"]
+        check("matrix: 5 runs incl starred + 4 categories (conv/gen/enc/net-ref-tst)",
+              len(cats["words"]) == 5 and "starred" in cats["words"]
+              and len(catWords) == 4 and "conv" in catWords and "gen" in catWords, cats)
+        check("matrix: every run has a divider line", cats["ln"] == 5, cats)
+        # category words share derived --accent2 (computed color); starred word uses --accent3
+        catCols = [a["c"] for a in cats["accents"] if a["w"] != "starred"]
+        starCol = [a["c"] for a in cats["accents"] if a["w"] == "starred"]
+        check("matrix: category words share derived accent2 (not hardcoded)",
+              len({tuple(c.split(", ")) for c in catCols}) == 1
+              and "255, 243, 196" not in catCols[0]  # not the :root fallback default
+              and starCol and tuple(starCol[0].split(", ")) != tuple(catCols[0].split(", ")), cats)
+        # star feature: built tools have a VISIBLE star; soon tools' star is display:none; shelf starts hidden
+        stars = page_eval(page, """() => ({
+          built:[...document.querySelectorAll('.card:not(.soon)')].map(c=>({has:!!c.querySelector('.starbtn')})),
+          soonHide:[...document.querySelectorAll('.card.soon .starbtn')].map(b=>getComputedStyle(b).display),
+          shelfHidden:document.getElementById('starrow').hidden
+        })""")
+        check("star: built tools show star toggle, soon tools' hidden",
+              all(s["has"] for s in stars["built"]) and len(stars["soonHide"]) == 16
+              and all(d == "none" for d in stars["soonHide"]), stars)
+        check("star: shelf hidden until ≥1 starred", stars["shelfHidden"] is True, stars)
+        # star round-trip: star jpeg-converter -> shelf appears (duplicated), unstar -> shelf hides
+        starRT = page_eval(page, """() => {
+          const btn=document.querySelector('.card[data-k=jpeg-converter] .starbtn');
+          btn.click(); return true;
+        }""")
+        page.wait_for_timeout(200)
+        shelf = page_eval(page, """() => ({
+          hidden:document.getElementById('starrow').hidden,
+          cnt:document.querySelectorAll('.starredrow .card').length,
+          filled:document.querySelector('.card[data-k=jpeg-converter] .mi').textContent,
+          shelfStar:!!document.querySelector('.starredrow .starbtn')
+        })""")
+        check("star: starring a tool shows the shelf w/ duplicate",
+              shelf["hidden"] is False and shelf["cnt"] == 1 and shelf["shelfStar"], shelf)
+        check("star: native star fills accent3-dir when starred", shelf["filled"] == "star", shelf)
+        page_eval(page, "document.querySelector('.card[data-k=jpeg-converter] .starbtn').click()")
+        page.wait_for_timeout(200)
+        shelf2 = page_eval(page, "document.getElementById('starrow').hidden")
+        check("star: unstar hides the shelf", shelf2 is True, shelf2)
         check("index not black (palette applied)", r["bg"] not in ("#0a0a0a","",), r)
         check("aurora + scanlines present", r["hasAurora"] and r["hasScan"], r)
         check("no horizontal overflow (desktop)", not r["over"], r)
