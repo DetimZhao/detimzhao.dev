@@ -86,3 +86,6 @@ never hand-edit the label.
   - **Length number input centered** (native spinners hidden) right of slider.
   - **Strength meter below** the password box.
   Bump: MAJOR (design-language rework).
+- **v3.0.1 (password-generator)** — box-corner copy icon is **hover/focus-only**
+  (removed the `@media (hover:none)` always-on override that made it persistent
+  on some setups). At rest the box is clean. Bump: PATCH (bugfix).

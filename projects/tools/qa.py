@@ -273,7 +273,7 @@ def main():
         check("password generator generates a password", L >= 8, pwg)
         check("generated length matches slider", str(L) == str(pwg.get("len")), pwg)
         check("palette applied (not black)", pwg.get("bg") not in ("#0a0a0a", ""), pwg)
-        check("version const renders v3.0", pwg.get("ver") == "v3.0", pwg)
+        check("version const renders v3.0.1", pwg.get("ver") == "v3.0.1", pwg)
         # copy/regenerate are full-width stacked buttons, NOT inside the password box
         box_actions = page_eval(page, """() => {
           const hero=document.querySelector('.hero'), ac=document.querySelector('.actions');
