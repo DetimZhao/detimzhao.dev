@@ -273,7 +273,7 @@ def main():
         check("password generator generates a password", L >= 8, pwg)
         check("generated length matches slider", str(L) == str(pwg.get("len")), pwg)
         check("palette applied (not black)", pwg.get("bg") not in ("#0a0a0a", ""), pwg)
-        check("version const renders v2.1", pwg.get("ver") == "v2.1", pwg)
+        check("version const renders v2.2", pwg.get("ver") == "v2.2", pwg)
         # actions live OUTSIDE the password box (1Password layout)
         box_actions = page_eval(page, """() => {
           const hero=document.querySelector('.hero'), ab=document.querySelector('.actionbar');
@@ -308,6 +308,27 @@ def main():
                [("upper","[A-Z]"),("lower","[a-z]"),("digit","[0-9]"),("sym","[^A-Za-z0-9]")]}
         check("generated pw has each selected class", all(has.values()), has)
         check("default strength strong", pwg.get("str") == "strong", pwg)
+        # accent coloring: digits + symbols are colored via .acc spans (1Password touch)
+        acc = page_eval(page, """() => {
+          const pw=document.getElementById('pw');
+          return {accText:[...pw.querySelectorAll('.acc')].map(e=>e.textContent).join(''),
+                  accColor:getComputedStyle(pw.querySelector('.acc')||pw).color,
+                  pwColor:getComputedStyle(pw).color,
+                  lenInput:document.getElementById('lenInput').value,
+                  hasCopyIcon:!!document.getElementById('copyIcon'),
+                  actionsCentered:getComputedStyle(document.querySelector('.actionbar')).justifyContent};
+        }""")
+        check("digits+symbols accented, letters plain",
+              bool(re.search(r"[0-9]", acc.get("accText") or "")) and bool(re.search(r"[^A-Za-z0-9]", acc.get("accText") or ""))
+              and acc.get("accColor") != acc.get("pwColor"), acc)
+        check("length is a typeable number input", acc.get("lenInput") == "20", acc)
+        check("copy icon present in box", acc.get("hasCopyIcon") is True, acc)
+        check("action bar centered", acc.get("actionsCentered") == "center", acc)
+        # typed length syncs back to the slider
+        page_eval(page, """() => { const li=document.getElementById('lenInput'); li.value=35; li.dispatchEvent(new Event('input')); }""")
+        page.wait_for_timeout(150)
+        len_after = page_eval(page, "document.getElementById('len').value")
+        check("typed length syncs slider (35)", len_after == "35", len_after)
         # toggling off a class removes its chars + drops strength
         page_eval(page, """() => [...document.querySelectorAll('.toggle')].find(t=>t.dataset.pool==='sym').click()""")
         page.wait_for_timeout(150)
@@ -333,11 +354,13 @@ def main():
           const q=s=>document.querySelector(s);
           return {pw:q('#pw').textContent, classesHidden:q('#classesField').style.display==='none',
             modeOn:[...q('#typeSeg').querySelectorAll('.on')].map(b=>b.dataset.type),
-            lenMin:q('#len').min, lenMax:q('#len').max};
+            lenMin:q('#len').min, lenMax:q('#len').max,
+            strengthHidden:q('#strengthField').style.display==='none'};
         }""")
-        check("PIN mode: digits-only + hidden classes + range 4-12",
+        check("PIN mode: digits-only + hidden classes + range 4-12 + hidden strength",
               re.fullmatch(r"[0-9]+", pint.get("pw") or "") is not None
               and pint.get("classesHidden") is True
+              and pint.get("strengthHidden") is True
               and pint.get("modeOn") == ["pin"] and pint.get("lenMin") == "4" and pint.get("lenMax") == "12", pint)
         # revert classes for integration consistency
         page.goto(f"{BASE}/projects/tools/index.html", wait_until="load")

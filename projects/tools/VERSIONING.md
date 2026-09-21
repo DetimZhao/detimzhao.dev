@@ -65,3 +65,12 @@ never hand-edit the label.
   output region (strength meter + password box + copy/regenerate) fills below,
   so you configure first, then review and act on the result where your eye is.
   Bump: MINOR (layout/flow iteration).
+- **v2.2 (password-generator)** — 1Password detail pass: **accent coloring** —
+  digits *and* symbol chars render in the accent colour, letters stay neutral
+  (matches 1Password's generator). **Strength meter hidden in PIN mode**
+  (a numeric code has no meaningful strength readout). **Typeable length via
+  `input[type=number]`, synced both ways with the slider**. **Copy icon
+  (Material `content_copy`) fades into the box's top-right corner on hover**
+  (desktop) / always visible on touch. **Centered** controls + action bar
+  (kills the edge-hugging negative space). Rounded edges up. Bump: MINOR
+  (UX + feature detail).
