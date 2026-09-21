@@ -67,3 +67,26 @@ When Quantum picks a direction (grouped vs flat), the immediate build is:
 Head-only (no server). Per two-voice rule (Commit Mono + DM Sans), per-tool
 `VERSION` const, QA harness grows a "category tag present" assertion per card.
 New tools fill in one page at a time behind `soon` → active.
+
+## RESOLVED 2026-09-21 — locked decisions (see git history on tools-matrix-outline)
+- **Display direction:** grouped category runs, each tool its own rounded card,
+  adaptive 4→3→2→1 columns (`repeat` breakpoints). Index numbers 01→18 sequential
+  top-to-bottom across categories (no gaps, no `--`).
+- **Category header = V11b:** big category word (1.4em, weight 700) in derived
+  `--accent2` + a faded neutral dashed divider line to the page edge. NOT the
+  `//` comment (dropped), NOT two-accent (V11 word different from line rejected as
+  too-many-colors; color carries only the word, divider stays muted). Chosen for
+  single-accent discipline + label/divider role separation (guidelines).
+- **STARRED shelf (option A):** verified it-tools / dock / bookmarks — favorites
+  are a DUP linear shelf at top, tool stays in its native category too. ✓Baked:
+  `★ starred` run (word + divider in --accent3) at top, hidden until ≥1 star;
+  per-card Material `star`/`star_border` toggle (top-right, hover/focus reveal,
+  filled + accent3 when starred, star stays VISIBLE once starred — click to
+  unstar from BOTH native card and shelf duplicate). `--accent3` derived
+  `rotHue(accent,250)`; `--accent2` = `rotHue(accent,165)`. Persistence
+  `detimzhao.starred` (JSON object of keys). `soon` tools hide the star button.
+  Star color = --accent3 (Quantum deferred color choice to me; picked accent3 to
+  match the star metaphor, distinct from category --accent2).
+- **Naming:** use "star / starred", NOT "pin" — the lab's `s`-key `pin` already
+  means "pin the landing theme" (load-bearing persistence); reusing it here would
+  violate NN/g heuristic #4 (consistency).

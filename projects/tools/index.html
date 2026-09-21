@@ -9,27 +9,26 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=star,star_border" rel="stylesheet">
 <style>
   @font-face { font-family: 'Commit Mono'; src: url('/fonts/commit-mono-latin-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
   @font-face { font-family: 'Commit Mono'; src: url('/fonts/commit-mono-latin-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    /* defaults — overridden by the shared palette on load (matches landing) */
     --bg: #0a0a0a; --fg: #eef0ff; --accent: #fff3c4;
+    --accent2: #fff3c4; --accent3: #fff3c4; /* defaults — derived from palette on load */
     --muted: color-mix(in srgb, var(--fg) 55%, var(--bg));
     --mono: "Commit Mono", "JetBrains Mono", ui-monospace, monospace;
     --prose: "DM Sans", sans-serif;
   }
+  .mi { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; line-height: 1;
+        display: inline-block; font-variation-settings: 'FILL' 0 1, 'wght' 400; }
   html, body { height: 100%; }
   body {
-    background: var(--bg);
-    color: var(--fg);
-    font-family: var(--mono);
-    -webkit-font-smoothing: antialiased;
-    line-height: 1.5;
+    background: var(--bg); color: var(--fg); font-family: var(--mono);
+    -webkit-font-smoothing: antialiased; line-height: 1.5;
     position: relative; overflow-x: hidden;
   }
-  /* ambient generative field - static, matches landing (GPU accel off) */
   .aurora {
     position: fixed; inset: 0; z-index: 0; pointer-events: none;
     background:
@@ -53,26 +52,64 @@
   .topbar a:hover { color: var(--accent); }
   .topbar .crumb { color: var(--muted); font-weight: 400; }
   .topbar .dot { color: var(--accent); }
-  main { max-width: 720px; margin: 0 auto; padding: clamp(24px, 6vh, 56px) clamp(16px, 4vw, 28px) 64px; position: relative; z-index: 1; }
+  main { max-width: 1200px; margin: 0 auto; padding: clamp(24px, 6vh, 56px) clamp(16px, 4vw, 28px) 64px; position: relative; z-index: 1; }
   h1 { font-size: clamp(1.6em, 4vw, 2.2em); font-weight: 700; letter-spacing: -0.01em; }
   .lead { margin-top: 0.6em; color: var(--muted); font-size: 0.92em; font-family: var(--prose); }
-  .grid { margin-top: 2em; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1em; }
+
+  /* grouped category runs — V11b: accent2 word + faded neutral divider line */
+  .run { margin-top: 2em; }
+  .run:first-child { margin-top: 1.6em; }
+  .cat {
+    display: flex; align-items: center; gap: 0.9em;
+    margin-bottom: 0.9em; font-size: 1.4em; font-weight: 700; letter-spacing: -0.01em;
+  }
+  .cat b { color: var(--accent2); font-weight: 700; }
+  .cat .ln { flex: 1; border-bottom: 1px dashed color-mix(in srgb, var(--fg) 22%, transparent); }
+  /* starred shelf header uses the 3rd accent (matches the star color) */
+  .cat b.star { color: var(--accent3); }
+
+  /* adaptive card grid */
+  .grid { display: grid; gap: 1em; grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 1200px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 800px)  { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px)  { .grid { grid-template-columns: 1fr; } }
+
   .card {
     display: block; text-decoration: none; color: var(--fg);
     border: 1px solid color-mix(in srgb, var(--fg) 18%, transparent);
-    border-radius: 0.6em; padding: 1.1em 1.1em 1.2em;
+    border-radius: 0.6em; padding: 1.1em 1.1em 1.15em;
     transition: border-color .15s, transform .15s, background .15s;
     position: relative;
   }
   .card:hover, .card:focus-visible { border-color: var(--accent); transform: translateY(-2px); background: color-mix(in srgb, var(--accent) 5%, transparent); }
-  .card .t { display: flex; align-items: baseline; gap: 0.6em; }
-  .card .n { color: var(--muted); font-size: 0.72em; }
-  .card .tt { font-weight: 700; font-size: 1.15em; }
-  .card .tt::after { content: " ↗"; color: var(--accent); opacity: 0; font-size: 0.8em; transition: opacity .15s; }
-  .card:hover .tt::after { opacity: 1; }
-  .card .d { margin-top: 0.5em; color: var(--muted); font-size: 0.85em; font-family: var(--prose); }
-  .soon .tt::after { content: ""; }
-  .soon { opacity: .45; cursor: default; pointer-events: none; }
+  .head { display: flex; align-items: baseline; gap: 0.6em; }
+  .n { color: var(--muted); font-size: 0.72em; flex: none; }
+  .tt { font-weight: 700; font-size: 1.12em; }
+  .ar { margin-left: auto; color: var(--accent); font-size: 0.95em; opacity: 0; transition: opacity .15s; }
+  .card:hover .ar, .card:focus-visible .ar { opacity: 1; }
+  .d { margin-top: 0.55em; color: var(--muted); font-size: 0.82em; font-family: var(--prose); line-height: 1.45; }
+
+  /* star toggle — top-right of each card, appears on hover/focus; filled accent3 when starred */
+  .starbtn {
+    position: absolute; top: 0.7em; right: 0.7em; z-index: 2;
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); opacity: 0; transition: opacity .15s, color .15s, background .15s;
+    display: flex; align-items: center; justify-content: center;
+    width: 2em; height: 2em; border-radius: 0.4em; font-size: 1em;
+  }
+  .card:hover .starbtn, .starbtn:focus-visible { opacity: 1; }
+  .starbtn:hover { color: var(--accent3); background: color-mix(in srgb, var(--accent3) 12%, transparent); }
+  .starbtn.starred { opacity: 1; color: var(--accent3); }
+  .starbtn.starred .mi { font-variation-settings: 'FILL' 1, 'wght' 400; }
+  /* starred-shelf cards get a faint accent3 edge so the shelf reads as distinct */
+  .starredrow .card { border-color: color-mix(in srgb, var(--accent3) 40%, transparent); }
+  .starredrow .card .starbtn { color: var(--accent3); }
+  .starredrow .card .starbtn .mi { font-variation-settings: 'FILL' 1, 'wght' 400; }
+  .starredrow .card .n { visibility: hidden; } /* shelf drops the category-index number */
+
+  .soon { opacity: .5; }
+  .soon .ar { opacity: 0; }
+  .soon .starbtn { display: none; } /* can't star a not-yet-built tool */
   a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -88,26 +125,64 @@
   <main>
     <h1>tools</h1>
     <div class="lead">a small toolbox - everything runs in your browser, nothing gets uploaded</div>
-    <div class="grid">
-      <a class="card" href="/projects/tools/jpeg-converter.html">
-        <span class="t"><span class="n">01</span><span class="tt">jpeg-converter</span></span>
-        <div class="d">resize and re-encode images - drag a file in, get a lean jpeg or webp out</div>
-      </a>
-      <a class="card" href="/projects/tools/password-generator.html">
-        <span class="t"><span class="n">02</span><span class="tt">password-generator</span></span>
-        <div class="d">strong random passwords, generated locally - length, classes, and strength at a glance</div>
-      </a>
+
+    <!-- starred shelf — populated by JS; hidden until ≥1 tool is starred -->
+    <div class="run starredrow" id="starrow" hidden>
+      <div class="cat"><b class="star">starred</b><span class="ln"></span></div>
+      <div class="grid" id="stargrid"></div>
+    </div>
+
+    <div class="run"><div class="cat"><b>conv</b><span class="ln"></span></div>
+      <div class="grid">
+        <a class="card soon" data-k="json-prettify"><button class="starbtn" aria-label="star json-prettify"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">01</span><span class="tt">json-prettify</span><span class="ar">↗</span></span><div class="d">format and minify json</div></a>
+        <a class="card soon" data-k="yaml-vs-json"><button class="starbtn" aria-label="star yaml-vs-json"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">02</span><span class="tt">yaml-vs-json</span><span class="ar">↗</span></span><div class="d">convert between yaml and json config</div></a>
+        <a class="card" href="/projects/tools/jpeg-converter.html" data-k="jpeg-converter"><button class="starbtn" aria-label="star jpeg-converter"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">03</span><span class="tt">jpeg-converter</span><span class="ar">↗</span></span><div class="d">resize and re-encode images locally</div></a>
+        <a class="card soon" data-k="case-converter"><button class="starbtn" aria-label="star case-converter"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">04</span><span class="tt">case-converter</span><span class="ar">↗</span></span><div class="d">camel, snake, kebab, pascal</div></a>
+        <a class="card soon" data-k="url-encoder"><button class="starbtn" aria-label="star url-encoder"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">05</span><span class="tt">url-encoder</span><span class="ar">↗</span></span><div class="d">encode and decode url parts</div></a>
+        <a class="card soon" data-k="html-entities"><button class="starbtn" aria-label="star html-entities"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">06</span><span class="tt">html-entities</span><span class="ar">↗</span></span><div class="d">encode and decode html entities</div></a>
+      </div>
+    </div>
+
+    <div class="run"><div class="cat"><b>gen</b><span class="ln"></span></div>
+      <div class="grid">
+        <a class="card" href="/projects/tools/password-generator.html" data-k="password-generator"><button class="starbtn" aria-label="star password-generator"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">07</span><span class="tt">password-generator</span><span class="ar">↗</span></span><div class="d">strong random passwords or pins, generated locally</div></a>
+        <a class="card soon" data-k="random-port"><button class="starbtn" aria-label="star random-port"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">08</span><span class="tt">random-port</span><span class="ar">↗</span></span><div class="d">one-button crypto-random port</div></a>
+        <a class="card soon" data-k="uuid-generator"><button class="starbtn" aria-label="star uuid-generator"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">09</span><span class="tt">uuid-generator</span><span class="ar">↗</span></span><div class="d">bulk uuids via crypto.randomUUID</div></a>
+        <a class="card soon" data-k="token-generator"><button class="starbtn" aria-label="star token-generator"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">10</span><span class="tt">token-generator</span><span class="ar">↗</span></span><div class="d">random base64 hex tokens</div></a>
+        <a class="card soon" data-k="crontab-generator"><button class="starbtn" aria-label="star crontab-generator"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">11</span><span class="tt">crontab-generator</span><span class="ar">↗</span></span><div class="d">build cron expressions visually</div></a>
+        <a class="card soon" data-k="lorem-ipsum"><button class="starbtn" aria-label="star lorem-ipsum"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">12</span><span class="tt">lorem-ipsum</span><span class="ar">↗</span></span><div class="d">placeholder filler text</div></a>
+      </div>
+    </div>
+
+    <div class="run"><div class="cat"><b>enc</b><span class="ln"></span></div>
+      <div class="grid">
+        <a class="card soon" data-k="hash-text"><button class="starbtn" aria-label="star hash-text"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">13</span><span class="tt">hash-text</span><span class="ar">↗</span></span><div class="d">sha-256 512 via crypto.subtle</div></a>
+        <a class="card soon" data-k="base64-string"><button class="starbtn" aria-label="star base64-string"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">14</span><span class="tt">base64-string</span><span class="ar">↗</span></span><div class="d">encode and decode base64</div></a>
+      </div>
+    </div>
+
+    <div class="run"><div class="cat"><b>net / ref / tst</b><span class="ln"></span></div>
+      <div class="grid">
+        <a class="card soon" data-k="ipv4-subnet"><button class="starbtn" aria-label="star ipv4-subnet"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">15</span><span class="tt">ipv4-subnet</span><span class="ar">↗</span></span><div class="d">cidr math and subnet lookup</div></a>
+        <a class="card soon" data-k="regex-tester"><button class="starbtn" aria-label="star regex-tester"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">16</span><span class="tt">regex-tester</span><span class="ar">↗</span></span><div class="d">flags and match highlighting</div></a>
+        <a class="card soon" data-k="json-diff"><button class="starbtn" aria-label="star json-diff"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">17</span><span class="tt">json-diff</span><span class="ar">↗</span></span><div class="d">side-by-side json compare</div></a>
+        <a class="card soon" data-k="text-statistics"><button class="starbtn" aria-label="star text-statistics"><span class="mi" data-glyph>star_border</span></button><span class="head"><span class="n">18</span><span class="tt">text-statistics</span><span class="ar">↗</span></span><div class="d">chars, words, lines count</div></a>
+      </div>
     </div>
   </main>
 <script>
-  // --- share the landing's palette statically (no r/p/s controls) ---
+  /* --- theme (palette + derived accents), copied per-lab-page --- */
   (function(){
     var KEY = 'detimzhao.palette';
     function apply(p){
       var s = document.documentElement.style;
       s.setProperty('--bg', p.bg); s.setProperty('--fg', p.fg); s.setProperty('--accent', p.accent);
+      var a2 = p.accent2 || rotHue(p.accent, 165);
+      var a3 = p.accent3 || rotHue(p.accent, 250);
+      s.setProperty('--accent2', a2); s.setProperty('--accent3', a3);
     }
-    // same flash-friendly converter + constrained generator as the landing
+    function hex2hsl(hx){ var m=function(a){return parseInt(hx.slice(a,a+2),16)/255}; var r=m(1),g=m(3),b=m(5),mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,d=mx-mn; var h,s; if(!d){h=0;s=0;} else { s = l>0.5 ? d/(2-mx-mn) : d/(mx+mn); switch(mx){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;default:h=(r-g)/d+4;} h*=60; } return [h%360, s*100, l*100]; }
+    function rotHue(hex,deg){ var c=hex2hsl(hex); return hsl2hex(((c[0]+deg)%360+360)%360, c[1], c[2]); }
     function hsl2hex(h,s,l){ s/=100; l/=100; var k=function(n){return (n+h/30)%12}, a=s*Math.min(l,1-l), f=function(n){var v=Math.min(k(n)-3,9-k(n)); return l-a*Math.max(-1,Math.min(1,v))}; var to=function(x){return Math.round(x*255).toString(16).padStart(2,'0')}; return '#'+to(f(0))+to(f(8))+to(f(4)); }
     function gen(){
       var H = Math.random()*360|0;
@@ -117,13 +192,62 @@
     }
     var saved = null;
     try { saved = JSON.parse(localStorage.getItem(KEY)); } catch(e) {}
-    if (saved && saved.bg) {
-      apply(saved);
-    } else {
-      var p = gen();
-      apply(p);
-      try { localStorage.setItem(KEY, JSON.stringify(p)); } catch(e) {}
+    if (saved && saved.bg) { apply(saved); }
+    else { var p = gen(); apply(p); try { localStorage.setItem(KEY, JSON.stringify(p)); } catch(e) {} }
+  })();
+
+  /* --- starred shelf (option A: duplicates, stays in its category too) --- */
+  (function(){
+    var KEY = 'detimzhao.starred';
+    var starRow = document.getElementById('starrow');
+    var starGrid = document.getElementById('stargrid');
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.card[data-k]'));
+
+    function load(){ try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e) { return {}; } }
+    function save(st){ try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(e) {} }
+
+    function render(){
+      var st = load();
+      // sync each native card's star button state
+      cards.forEach(function(c){
+        var k = c.getAttribute('data-k');
+        var btn = c.querySelector('.starbtn');
+        var g = c.querySelector('[data-glyph]');
+        if (btn && g){
+          btn.classList.toggle('starred', !!st[k]);
+          g.textContent = st[k] ? 'star' : 'star_border';
+          btn.setAttribute('aria-label', (st[k]?'unstar ':'star ')+k);
+        }
+      });
+      // rebuild star shelf (duplicate: tools stay in their categories too)
+      starGrid.innerHTML = '';
+      var starred = Object.keys(st).filter(function(k){ return st[k]; });
+      starRow.hidden = starred.length === 0;
+      starred.forEach(function(k){
+        var src = cards.filter(function(c){ return c.getAttribute('data-k') === k; })[0];
+        if (!src) return;
+        var clone = src.cloneNode(true);
+        clone.classList.remove('soon');
+        clone.removeAttribute('hidden');
+        // keep the star button on the shelf card — click it to unstar here (document-delegated toggle handles it)
+        if (clone.hasAttribute('href')) clone.setAttribute('href', src.getAttribute('href'));
+        starGrid.appendChild(clone);
+      });
     }
+
+    document.addEventListener('click', function(e){
+      var btn = e.target.closest('.starbtn');
+      if (!btn) return;
+      e.preventDefault(); e.stopPropagation();
+      var card = btn.closest('.card');
+      var k = card ? card.getAttribute('data-k') : null;
+      if (!k) return;
+      var st = load();
+      if (st[k]) delete st[k]; else st[k] = true;
+      save(st); render();
+    });
+
+    render();
   })();
 </script>
 </body>
