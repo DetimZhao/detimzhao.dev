@@ -273,7 +273,17 @@ def main():
         check("password generator generates a password", L >= 8, pwg)
         check("generated length matches slider", str(L) == str(pwg.get("len")), pwg)
         check("palette applied (not black)", pwg.get("bg") not in ("#0a0a0a", ""), pwg)
-        check("version const renders v1.0.1", pwg.get("ver") == "v1.0.1", pwg)
+        check("version const renders v2.0", pwg.get("ver") == "v2.0", pwg)
+        # actions live OUTSIDE the password box (1Password layout)
+        box_actions = page_eval(page, """() => {
+          const hero=document.querySelector('.hero'), ab=document.querySelector('.actionbar');
+          return {copyInBox: hero.contains(document.getElementById('copy')),
+                  copyInBar: ab && ab.contains(document.getElementById('copy')),
+                  pwInBox: hero.contains(document.getElementById('pw'))};
+        }""")
+        check("copy/regenerate live outside the password box",
+              box_actions.get("copyInBox") is False and box_actions.get("copyInBar") is True
+              and box_actions.get("pwInBox") is True, box_actions)
         # two-voice type on password-gen: field caption = DM Sans, password/toggles = mono
         tvpw = page_eval(page, """() => {
           const ff=el=>el?getComputedStyle(el).fontFamily:'';
@@ -309,6 +319,19 @@ def main():
         page.wait_for_timeout(100)
         last_left = page_eval(page, "([...document.querySelectorAll('.toggle.on')].length)")
         check("last char class cannot be unchecked", last_left == 1, {"left": last_left})
+        # PIN mode: digits only, classes hidden, own range
+        page_eval(page, """() => { document.querySelector('#typeSeg button[data-type="pin"]').click(); }""")
+        page.wait_for_timeout(200)
+        pint = page_eval(page, """() => {
+          const q=s=>document.querySelector(s);
+          return {pw:q('#pw').textContent, classesHidden:q('#classesField').style.display==='none',
+            modeOn:[...q('#typeSeg').querySelectorAll('.on')].map(b=>b.dataset.type),
+            lenMin:q('#len').min, lenMax:q('#len').max};
+        }""")
+        check("PIN mode: digits-only + hidden classes + range 4-12",
+              re.fullmatch(r"[0-9]+", pint.get("pw") or "") is not None
+              and pint.get("classesHidden") is True
+              and pint.get("modeOn") == ["pin"] and pint.get("lenMin") == "4" and pint.get("lenMax") == "12", pint)
         # revert classes for integration consistency
         page.goto(f"{BASE}/projects/tools/index.html", wait_until="load")
         page.wait_for_timeout(300)
