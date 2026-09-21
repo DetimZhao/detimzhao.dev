@@ -47,3 +47,10 @@ never hand-edit the label.
   digits/symbols, all on, last-class guard), entropy-based strength meter
   (weak/fair/strong), copy to clipboard + copy-on-click, regenerate. Deployed
   under `projects/tools/`. Card added to the tools index.
+- **v1.3 typography (cross-tool)** — tools pages now follow the lab's locked
+  **two-voice type**: prose (lead lines, card descriptions, field captions,
+  drop-zone instructions) renders in **DM Sans**; all surfaces (titles,
+  buttons, toggles, the password itself, numeric stats) stay in **Commit
+  Mono / JetBrains Mono**. Pages previously loaded only JetBrains Mono, so
+  prose was wrongly mono. Deployed as tools-log `v1.3`; per-tool labels bumped
+  to `jpeg-converter v1.1.1` / `password-generator v1.0.1`.

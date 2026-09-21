@@ -81,6 +81,17 @@ def main():
         check("aurora + scanlines present", r["hasAurora"] and r["hasScan"], r)
         check("no horizontal overflow (desktop)", not r["over"], r)
 
+        # two-voice type on index: lead + card description = DM Sans, titles = mono
+        tvidx = page_eval(page, """() => {
+          const ff=el=>el?getComputedStyle(el).fontFamily:'';
+          return {lead:ff(document.querySelector('.lead')),
+                  cardD:ff(document.querySelector('.card .d')),
+                  h1:ff(document.querySelector('h1'))};
+        }""")
+        check("index two-voice: prose DM Sans / title mono",
+              'DM Sans' in (tvidx.get('lead') or '') and 'DM Sans' in (tvidx.get('cardD') or '')
+              and 'Mono' in (tvidx.get('h1') or ''), tvidx)
+
         # ---- responsive index ----
         for w in (320, 390):
             page.set_viewport_size({"width": w, "height": 700})
@@ -109,8 +120,18 @@ def main():
         fill = page_eval(page, """() => { const m=document.querySelector('main'), d=document.querySelector('.drop'); return {mainH:m.getBoundingClientRect().height, dropH:d.getBoundingClientRect().height}; }""")
         check("drop zone fills most of the stage on load",
               fill['dropH'] is not None and fill['mainH'] and fill['dropH']/fill['mainH'] > 0.5, fill)
+        # two-voice type: prose = DM Sans, surfaces = mono (landing rule)
+        tv = page_eval(page, """() => {
+          const ff=el=>el?getComputedStyle(el).fontFamily:'';
+          return {dropBig:ff(document.querySelector('.drop .big')),
+                  fieldLabel:ff(document.querySelector('.field label')),
+                  segBtn:ff(document.querySelector('.seg button'))};
+        }""")
+        check("converter two-voice: prose DM Sans / surface mono",
+              'DM Sans' in (tv.get('dropBig') or '') and 'DM Sans' in (tv.get('fieldLabel') or '')
+              and 'Mono' in (tv.get('segBtn') or ''), tv)
         check("download disabled before upload", r['dlDisabled'] is True, r)
-        check("version const renders v1.1", r['ver'] == 'v1.1', r)
+        check("version const renders v1.1.1", r['ver'] == 'v1.1.1', r)
 
         # make a real test image (2560x1440 PNG) via pure-stdlib writer (no PIL dep)
         import base64, struct, zlib
@@ -252,7 +273,17 @@ def main():
         check("password generator generates a password", L >= 8, pwg)
         check("generated length matches slider", str(L) == str(pwg.get("len")), pwg)
         check("palette applied (not black)", pwg.get("bg") not in ("#0a0a0a", ""), pwg)
-        check("version const renders v1.0", pwg.get("ver") == "v1.0", pwg)
+        check("version const renders v1.0.1", pwg.get("ver") == "v1.0.1", pwg)
+        # two-voice type on password-gen: field caption = DM Sans, password/toggles = mono
+        tvpw = page_eval(page, """() => {
+          const ff=el=>el?getComputedStyle(el).fontFamily:'';
+          return {fieldLbl:ff(document.querySelector('.field label')),
+                  pw:ff(document.getElementById('pw')),
+                  toggle:ff(document.querySelector('.toggle'))};
+        }""")
+        check("password-gen two-voice: caption DM Sans / pw mono",
+              'DM Sans' in (tvpw.get('fieldLbl') or '') and 'Mono' in (tvpw.get('pw') or '')
+              and 'Mono' in (tvpw.get('toggle') or ''), tvpw)
         # all 4 classes by default; every class represented
         pools_default = set(pwg.get("pools") or [])
         check("all 4 char classes on by default", pools_default == {"upper","lower","digit","sym"}, pwg)
