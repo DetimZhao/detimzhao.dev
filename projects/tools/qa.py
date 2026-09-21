@@ -105,8 +105,12 @@ def main():
         # privacy promise is lab-level (already on the landing) — converter carries no redundant line
         check("no redundant privacy line on converter",
               page_eval(page, "document.querySelector('.privacy')") is None)
+        # drop zone fills the stage on first load (hero target), retires after upload
+        fill = page_eval(page, """() => { const m=document.querySelector('main'), d=document.querySelector('.drop'); return {mainH:m.getBoundingClientRect().height, dropH:d.getBoundingClientRect().height}; }""")
+        check("drop zone fills most of the stage on load",
+              fill['dropH'] is not None and fill['mainH'] and fill['dropH']/fill['mainH'] > 0.5, fill)
         check("download disabled before upload", r['dlDisabled'] is True, r)
-        check("version const renders v1.0.2", r['ver'] == 'v1.0.2', r)
+        check("version const renders v1.1", r['ver'] == 'v1.1', r)
 
         # make a real test image (2560x1440 PNG) via pure-stdlib writer (no PIL dep)
         import base64, struct, zlib
@@ -219,7 +223,9 @@ def main():
         }""")
         check("dragover toggles .hover class", drag_ok is True)
 
-        # ---- non-image rejection ----
+        # ---- non-image rejection (fresh load: drop prompt is hidden once a file is loaded) ----
+        page.goto(f"{BASE}/projects/tools/jpeg-converter.html", wait_until="load")
+        page.wait_for_timeout(400)
         nonimg = os.path.join(tmp, "note.txt")
         with open(nonimg, "w") as f:
             f.write("not an image")

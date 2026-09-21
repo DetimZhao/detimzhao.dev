@@ -37,3 +37,8 @@ never hand-edit the label.
   so the converter's redundant privacy line is removed entirely (text + icon +
   the now-unused Material Symbols font link). Landing pin toast reads
   `✓ pinned theme` for clarity (footer hint stays `[ s ] pin`).
+- **v1.1** — drop zone becomes the hero: fills the stage on first load
+  (flex-grow, centered) so there's no dead negative space and the drop target
+  is larger/more tappable (matches client-side tools like Google Squoosh). The
+  prompt retires once a file loads (`main.has-file`), and the working panel
+  takes the full stage. Bump: MINOR (UX/layout iteration).

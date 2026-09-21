@@ -52,12 +52,14 @@
   .topbar a:hover { color: var(--accent); }
   .topbar .crumb { color: var(--muted); font-weight: 400; }
   .topbar .dot { color: var(--accent); }
-  main { max-width: 680px; margin: 0 auto; padding: clamp(24px, 5vh, 48px) clamp(16px, 4vw, 28px) 64px; position: relative; z-index: 1; }
+  main { max-width: 680px; min-height: calc(100dvh - 56px); margin: 0 auto; padding: clamp(24px, 5vh, 48px) clamp(16px, 4vw, 28px) 64px; position: relative; z-index: 1; display: flex; flex-direction: column; }
   h1 { font-size: clamp(1.5em, 4vw, 2em); font-weight: 700; letter-spacing: -0.01em; }
 
-  /* drop zone */
+  /* drop zone — fills the stage on first load (the drop IS the hero action) */
   .drop {
-    margin-top: 2em;
+    margin-top: 1.5em;
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
     border: 1.5px dashed color-mix(in srgb, var(--muted) 60%, transparent);
     border-radius: 0.7em;
     padding: 2.2em 1.2em;
@@ -78,7 +80,9 @@
   .drop button:hover, .drop button:focus-visible { color: var(--accent); border-color: var(--accent); }
 
   /* working area */
-  .work { display: none; margin-top: 1.8em; }
+  .work { display: none; margin-top: 0; flex: 1; }
+  /* once something is loaded, retire the drop prompt and let the panel take the stage */
+  main.has-file .drop { display: none; }
   .panel {
     border: 1px solid color-mix(in srgb, var(--fg) 18%, transparent);
     border-radius: 0.7em; padding: 1.1em;
@@ -224,7 +228,7 @@
 </script>
 
 <script>
-  const VERSION = 'v1.0.2';   // see VERSIONING.md — single source of truth for the footer label
+  const VERSION = 'v1.1';   // see VERSIONING.md — single source of truth for the footer label
   (function(){
     var $ = function(id){ return document.getElementById(id); };
     var drop = $('drop'), fileInput = $('file'), work = $('work');
@@ -262,6 +266,7 @@
         origImg = im; origBytes = file.size;
         statIn.textContent = fmt(file.size, true);
         work.style.display = 'block';
+        document.querySelector('main').classList.add('has-file');
         meta.textContent = file.name;
         render();
       };
