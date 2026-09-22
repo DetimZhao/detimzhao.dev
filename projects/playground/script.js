@@ -6,7 +6,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 /* ================= Config ================= */
-const VERSION = 'v8.0';   // see VERSIONING.md — single source of truth for the statusbar label
+const VERSION = 'v8.0.1';   // see VERSIONING.md — single source of truth for the statusbar label
 const MAX_TRAILS = 10;
 const MIN_POINTS = 5000;
 const VOLUME_RADIUS = 14;
@@ -49,7 +49,7 @@ let corpusPoints = null, corpusGeometry = null, corpusColors = null, corpusCount
 /* ================= Theme ================= */
 function isLight(){ const c = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); return c === 'light'; }
 function paintTheme(){ document.getElementById('theme-ico').textContent = isLight() ? '☾' : '☀'; }
-function themeToggle(){ root.dataset.theme = isLight() ? 'dark' : 'light'; paintTheme(); applySceneBg(); }
+function themeToggle(){ root.dataset.theme = isLight() ? 'dark' : 'light'; paintTheme(); applySceneBg(); applyTrailTheme(); recolor(); applyFloor(); }
 document.getElementById('theme-btn').addEventListener('click', themeToggle);
 paintTheme();
 
@@ -91,16 +91,46 @@ function createCircleTexture(){ const c = document.createElement('canvas'); c.wi
   const gr = g.createRadialGradient(32,32,0,32,32,26); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.25,'rgba(255,255,255,0.95)'); gr.addColorStop(0.6,'rgba(255,255,255,0.4)'); gr.addColorStop(1,'rgba(255,255,255,0)');
   g.fillStyle = gr; g.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); }
 function createGlowTexture(inner, outer, size){ const c = document.createElement('canvas'); c.width = size; c.height = size; const g = c.getContext('2d');
-  const gr = g.createRadialGradient(size/2,size/2,0,size/2,size/2,size/2); gr.addColorStop(0,inner); gr.addColorStop(0.3,inner); gr.addColorStop(0.7,outer); gr.addColorStop(1,'transparent');
-  g.fillStyle = gr; g.fillRect(0,0,size,size); return new THREE.CanvasTexture(c); }
+  const tex = new THREE.CanvasTexture(c);
+  tex.redraw = (inner2, outer2) => { g.clearRect(0,0,size,size);
+    const gr = g.createRadialGradient(size/2,size/2,0,size/2,size/2,size/2); gr.addColorStop(0,inner2); gr.addColorStop(0.3,inner2); gr.addColorStop(0.7,outer2); gr.addColorStop(1,'transparent');
+    g.fillStyle = gr; g.fillRect(0,0,size,size); tex.needsUpdate = true; };
+  tex.redraw(inner, outer); return tex; }
 function createRingTexture(){ const c = document.createElement('canvas'); c.width = 256; c.height = 256; const g = c.getContext('2d');
-  g.strokeStyle = 'rgba(0,212,255,0.4)'; g.lineWidth = 2; g.beginPath(); g.arc(128,128,104,0,Math.PI*2); g.stroke(); return new THREE.CanvasTexture(c); }
-function createLabelTexture(text, opacity){ const c = document.createElement('canvas'); c.width = 256; c.height = 64; const g = c.getContext('2d');
-  g.clearRect(0,0,c.width,c.height); g.font = '400 20px "JetBrains Mono",monospace'; g.fillStyle = 'rgba(0,229,255,' + (opacity||0.8) + ')';
-  g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 128, 32);
+  g.strokeStyle = trailTheme().ring; g.lineWidth = 2; g.beginPath(); g.arc(128,128,104,0,Math.PI*2); g.stroke(); return new THREE.CanvasTexture(c); }
+function createLabelTexture(text, opacity, rgb){ const ls = Math.max(1, trailTheme().labelScale||1);
+  const cw = Math.round(256*ls), ch = Math.round(64*ls);
+  const c = document.createElement('canvas'); c.width = cw; c.height = ch; const g = c.getContext('2d');
+  g.clearRect(0,0,cw,ch); g.font = '500 ' + Math.round(20*ls) + 'px "JetBrains Mono",monospace';
+  g.fillStyle = 'rgba(' + (rgb || '0,229,255') + ',' + Math.max(trailTheme().labelAlpha, opacity||0.8) + ')';
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, cw/2, ch/2);
   const t = new THREE.CanvasTexture(c); t.format = THREE.RGBAFormat; t.needsUpdate = true; return t; }
-const glowTex = createGlowTexture('rgba(0,229,255,0.7)','rgba(0,229,255,0)',128);
-const glowBright = createGlowTexture('rgba(0,255,255,0.9)','rgba(0,229,255,0)',128);
+/* Trail/connector color scheme, theme-aware (dark chip minted for dark; light chip for the light #d1d1d1 canvas).
+   The "white lines + sky-blue neon" read on near-black but vanish on the light canvas, partly because the glows
+   use AdditiveBlending (which can only ADD light — untraceable on a bright bg) and the white lines match the paper. */
+const THEME_TRAIL = {
+  dark : { line:0xffffff, add:true, labelScale:2.5, labelAlpha:0.85, labelOp:0.85, glowIn:'rgba(0,229,255,0.7)', glowOut:'rgba(0,229,255,0)', glowInB:'rgba(0,255,255,0.9)', glowOutB:'rgba(0,229,255,0)', ring:'rgba(0,212,255,0.4)', labelFill:'0,229,255', burstIn:'rgba(10,255,255,0.9)', burstOut:'rgba(10,229,255,0)' },
+  light: { line:0x243447, add:false, labelScale:2.5, labelAlpha:1.0, labelOp:1.0, glowIn:'rgba(0,94,160,0.55)', glowOut:'rgba(0,94,160,0)', glowInB:'rgba(0,80,140,0.85)', glowOutB:'rgba(0,104,178,0)', ring:'rgba(0,96,165,0.6)', labelFill:'18,24,32', burstIn:'rgba(0,80,140,0.9)', burstOut:'rgba(0,104,178,0)' }
+};
+function trailTheme(){ return isLight() ? THEME_TRAIL.light : THEME_TRAIL.dark; }
+let glowTex = createGlowTexture(trailTheme().glowIn, trailTheme().glowOut, 128);
+let glowBright = createGlowTexture(trailTheme().glowInB, trailTheme().glowOutB, 128);
+/* Recolor already-built trails + ripples in place when the theme flips. */
+function applyTrailTheme(){
+  const tt = trailTheme();
+  glowTex.redraw(tt.glowIn, tt.glowOut);          // textures are shared by every source/result glow sprite
+  glowBright.redraw(tt.glowInB, tt.glowOutB);
+  const blend = tt.add ? THREE.AdditiveBlending : THREE.NormalBlending;
+  const setSprite = s => { if (s && s.material){ s.material.blending = blend; s.material.needsUpdate = true; } };
+  const setLine   = m => { if (m && m.material && m.material.color){ m.material.color.setHex(tt.line); m.material.needsUpdate = true; } };
+  for (const t of trails){
+    t.lines.forEach(setLine);
+    t.glowSprites.forEach(setSprite);
+    t.labelSprites.forEach(s => { if (s && s.material){ s.material.map = createLabelTexture(s.userData.__text || '', s.userData.__op || 0.8, tt.labelFill); s.material.opacity = (t.opacity||1) * tt.labelOp; s.material.needsUpdate = true; s.scale.set(3.5*tt.labelScale, 0.875*tt.labelScale, 1); } });
+    if (t.resultGlow) setSprite(t.resultGlow);
+  }
+  ripples.forEach(r => { if (r.ring && r.ring.material){ r.ring.material.blending = blend; r.ring.material.needsUpdate = true; } if (r.gl && r.gl.material){ r.gl.material.blending = blend; r.gl.material.needsUpdate = true; } });
+}
 
 /* ================= Point cloud shader (theme/settings aware) ================= */
 const vert = `attribute float pointSize;uniform float uSize;varying vec3 vColor;varying float vDist;
@@ -169,7 +199,7 @@ function recolor(){
     const c3 = on ? hueColor(hue, 84, on ? 55 : 6) : new THREE.Color(0.04,0.05,0.07);
     baseColors[i*3]=c3.r; baseColors[i*3+1]=c3.g; baseColors[i*3+2]=c3.b;
   }
-  const fillerCol = isLight() ? new THREE.Color(0.72,0.74,0.80) : new THREE.Color(0.30,0.36,0.50);
+  const fillerCol = isLight() ? new THREE.Color(0.50,0.52,0.55) : new THREE.Color(0.30,0.36,0.50);
   for (let i=corpusCount;i<baseColors.length/3;i++){ baseColors[i*3]=fillerCol.r; baseColors[i*3+1]=fillerCol.g; baseColors[i*3+2]=fillerCol.b; }
   pushColors();
 }
@@ -210,9 +240,11 @@ function hideTip(){ tip.classList.remove('show'); }
 function showHoverLabel(pos){ }
 
 function clickBurst(pos){
-  const ring = new THREE.Sprite(new THREE.SpriteMaterial({ map: createRingTexture(), transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, depthTest:false, opacity:0.7 }));
+  const tt = trailTheme();
+  const blend = tt.add ? THREE.AdditiveBlending : THREE.NormalBlending;
+  const ring = new THREE.Sprite(new THREE.SpriteMaterial({ map: createRingTexture(), transparent:true, blending:blend, depthWrite:false, depthTest:false, opacity:0.7 }));
   ring.position.copy(pos); ring.scale.set(1,1,1); spriteGroup.add(ring);
-  const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: createGlowTexture('rgba(10,255,255,0.9)','rgba(10,229,255,0)',128), transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, depthTest:false, opacity:0.35 }));
+  const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: createGlowTexture(tt.burstIn, tt.burstOut, 128), transparent:true, blending:blend, depthWrite:false, depthTest:false, opacity:0.35 }));
   gl.position.copy(pos); gl.scale.set(0.15,0.15,1); spriteGroup.add(gl);
   ripples.push({ring, gl, age:0, maxAge:900});
 }
@@ -289,7 +321,14 @@ function syncAll(){ const allOn = SOURCES.every(s => onState[s.name]); lpAll.cla
 lpAll.addEventListener('click', () => { const allOn = SOURCES.every(s => onState[s.name]); SOURCES.forEach(s => onState[s.name] = !allOn); recolor(); renderLP(); syncAll(); });
 syncAll();
 let lpDots = false;
-function toggleLP(force){ lpDots = (force===undefined) ? !lpDots : force; leftpanel.classList.toggle('dots', lpDots); lpCol.textContent = lpDots ? '»' : '«'; lpCol.setAttribute('aria-label', lpDots?'Expand panel':'Collapse panel'); resizeCanvas(); }
+function toggleLP(force){ lpDots = (force===undefined) ? !lpDots : force; leftpanel.classList.toggle('dots', lpDots); lpCol.textContent = lpDots ? '»' : '«'; lpCol.setAttribute('aria-label', lpDots?'Expand panel':'Collapse panel'); resizeCanvas(); scheduleRecentre(); }
+// The left panel animates width over .22s (`transition:width`). resizeCanvas() reads the
+// stage bounds synchronously, so it must be re-run AFTER that transition settles — otherwise
+// the camera view-offset + `--xc` are computed for the pre-transition layout and the latent
+// space never recenters ("doesn't stay center when I open/close").
+function scheduleRecentre(){ setTimeout(recentreAfterPanel, 260); }
+function recentreAfterPanel(){ resizeCanvas(); }
+leftpanel.addEventListener('transitionend', e => { if (e.propertyName === 'width') resizeCanvas(); });
 lpCol.addEventListener('click', e => { e.stopPropagation(); toggleLP(); });
 let dragStartX = null, dragActive = false;
 function onDragDown(e){ if (e.target.closest('button')) return; dragStartX = e.clientX; dragActive = true; lpHead.setPointerCapture(e.pointerId); }
@@ -418,9 +457,10 @@ let trails = [];
 function createTrailObject(formula){ return { id: Date.now(), formula, glowSprites:[], labelSprites:[], lines:[], resultGlow:null, resultLabel:null, opacity:1.0 }; }
 function addSourceGlow(idx, trail){
   const p = corpusItems[idx].pos, pos = new THREE.Vector3(p[0],p[1],p[2]);
-  const m1 = new THREE.SpriteMaterial({ map: glowBright, blending:THREE.AdditiveBlending, depthWrite:false, depthTest:true, transparent:true, opacity:0.25 });
+  const blend = trailTheme().add ? THREE.AdditiveBlending : THREE.NormalBlending;
+  const m1 = new THREE.SpriteMaterial({ map: glowBright, blending:blend, depthWrite:false, depthTest:true, transparent:true, opacity:0.25 });
   const s1 = new THREE.Sprite(m1); s1.position.copy(pos); s1.scale.set(2.2,2.2,1); spriteGroup.add(s1); trail.glowSprites.push(s1);
-  const m2 = new THREE.SpriteMaterial({ map: glowTex, blending:THREE.AdditiveBlending, depthWrite:false, depthTest:true, transparent:true, opacity:0.45 });
+  const m2 = new THREE.SpriteMaterial({ map: glowTex, blending:blend, depthWrite:false, depthTest:true, transparent:true, opacity:0.45 });
   const s2 = new THREE.Sprite(m2); s2.position.copy(pos); s2.scale.set(0.8,0.8,1); spriteGroup.add(s2); trail.glowSprites.push(s2);
 }
 function addConnectorBetween(a, b, trail, bright){
@@ -428,38 +468,42 @@ function addConnectorBetween(a, b, trail, bright){
   if (len < 0.01) return null;
   const mid = new THREE.Vector3().copy(a).add(b).multiplyScalar(0.5);
   const geom = new THREE.CylinderGeometry(0.01, 0.015, len, 6, 1);
-  const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, blending:THREE.NormalBlending, depthWrite:false, depthTest:false, transparent:true, opacity: bright?0.95:0.7 });
+  const mat = new THREE.MeshBasicMaterial({ color: trailTheme().line, blending:THREE.NormalBlending, depthWrite:false, depthTest:false, transparent:true, opacity: bright?0.95:0.7 });
   const mesh = new THREE.Mesh(geom, mat); mesh.position.copy(mid);
   const up = new THREE.Vector3(0,1,0); mesh.setRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(up, dir.normalize()));
   mesh.renderOrder = 999; lineGroup.add(mesh); trail.lines.push(mesh);
   const dotGeom = new THREE.SphereGeometry(0.04,6,4);
-  const dotMat = new THREE.MeshBasicMaterial({ color:0xffffff, blending:THREE.NormalBlending, depthWrite:false, depthTest:false, transparent:true, opacity: bright?0.9:0.6 });
+  const dotMat = new THREE.MeshBasicMaterial({ color:trailTheme().line, blending:THREE.NormalBlending, depthWrite:false, depthTest:false, transparent:true, opacity: bright?0.9:0.6 });
   const da = new THREE.Mesh(dotGeom, dotMat); da.position.copy(a); da.renderOrder = 1000; lineGroup.add(da); trail.lines.push(da);
   const db = new THREE.Mesh(dotGeom, dotMat); db.position.copy(b); db.renderOrder = 1000; lineGroup.add(db); trail.lines.push(db);
   return mesh;
 }
 function addLabelAt(position, text, opacity, trail){
-  const tex = createLabelTexture(text, opacity);
-  const mat = new THREE.SpriteMaterial({ map: tex, blending:THREE.NormalBlending, depthWrite:false, depthTest:false, transparent:true, alphaTest:0.01, opacity:0.8 });
-  const spr = new THREE.Sprite(mat); spr.position.copy(position).add(new THREE.Vector3(0,0.35,0)); spr.scale.set(3.5,0.875,1);
+  const ls = trailTheme().labelScale||1;
+  const tex = createLabelTexture(text, opacity, trailTheme().labelFill);
+  const mat = new THREE.SpriteMaterial({ map: tex, blending:THREE.NormalBlending, depthWrite:false, depthTest:false, transparent:true, alphaTest:0.01, opacity:trailTheme().labelOp });
+  const spr = new THREE.Sprite(mat); spr.position.copy(position).add(new THREE.Vector3(0,0.35*ls,0)); spr.scale.set(3.5*ls,0.875*ls,1);
+  spr.userData.__text = text; spr.userData.__op = opacity;
   spriteGroup.add(spr); trail.labelSprites.push(spr); return spr;
 }
 function addResultGlow(pos, trail){
-  const mat = new THREE.SpriteMaterial({ map: glowBright, blending:THREE.AdditiveBlending, depthWrite:false, depthTest:true, transparent:true, opacity:0.7 });
+  const blend = trailTheme().add ? THREE.AdditiveBlending : THREE.NormalBlending;
+  const mat = new THREE.SpriteMaterial({ map: glowBright, blending:blend, depthWrite:false, depthTest:true, transparent:true, opacity:0.7 });
   const spr = new THREE.Sprite(mat); spr.position.copy(pos); spr.scale.set(1.6,1.6,1); spriteGroup.add(spr); trail.resultGlow = spr; return spr;
 }
 function dimAllTrails(){
+  const op = trailTheme().labelOp;
   for (let i=0;i<trails.length-1;i++){
     const t = trails[i], age = trails.length-1-i;
     t.opacity = Math.max(0.12, 0.18 + age*0.02);
     t.lines.forEach(l => { if (l.material) l.material.opacity = t.opacity*0.85; });
-    t.labelSprites.forEach(s => { if (s.material) s.material.opacity = t.opacity*0.8; });
+    t.labelSprites.forEach(s => { if (s.material) s.material.opacity = t.opacity*op; });
     t.glowSprites.forEach(s => { if (s.material) s.material.opacity = t.opacity*0.6; });
     if (t.resultGlow && t.resultGlow.material) t.resultGlow.material.opacity = t.opacity*0.7;
   }
   if (trails.length){ const t = trails[trails.length-1]; t.opacity = 1.0;
     t.lines.forEach(l => { if (l.material) l.material.opacity = 0.85; });
-    t.labelSprites.forEach(s => { if (s.material) s.material.opacity = 0.8; });
+    t.labelSprites.forEach(s => { if (s.material) s.material.opacity = op; });
     t.glowSprites.forEach(s => { if (s.material) s.material.opacity = 0.6; });
     if (t.resultGlow && t.resultGlow.material) t.resultGlow.material.opacity = 0.7; }
 }
@@ -752,5 +796,7 @@ async function init(){
   else startDemo();
 }
 animate();
+resizeCanvas();   // initial center: without this, centerStage never runs on first load
+                   // and the latent space sits stage-centered until the first panel toggle shifts it.
 setTimeout(() => eq.focus(), 100);
 init();
